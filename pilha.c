@@ -13,7 +13,7 @@ struct pilha{
 // aloca um bloco de memória dinamicamente (com tamanho da pilha)
 // para um ponteiro do tipo da pilha apontar, 
 // inicializando topo = -1 (pilha vazia)
-Pilha* create() {
+Pilha* create_pilha() {
     Pilha* p = (Pilha*)malloc(sizeof(Pilha));
     if (p == NULL) {
         printf("Erro ao alocar memória para a pilha.\n");
@@ -31,15 +31,19 @@ void push(Pilha* pilha, int id) {
 }
 
 // retira o termo do topo e imprime o valor
-float pop(Pilha* pilha) {
-    float valor = pilha->itens[pilha->topo];
+int pop(Pilha* pilha) {
+    int id = pilha->itens[pilha->topo];
     pilha->topo--;
 
-    return valor;
+    return id;
+}
+
+int pilha_vazia(Pilha* pilha){
+    return pilha->topo==-1;
 }
 
 // encerra e imprime todos os valores da pilha (do topo até a base)
-void encerrar(Pilha* pilha) {
+void encerrarPilha(Pilha* pilha) {
     printf("Pilha: ");
     for (int i = pilha->topo; i >= 0; i--) {
         printf("%.2f ", pilha->itens[i]);

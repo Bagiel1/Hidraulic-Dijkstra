@@ -34,7 +34,7 @@ void enfileirar(Fila *f, int id){
 int desenfileirar(Fila *f){
     if(filaVazia(f)){
         printf("Fila vazia");
-        return 0;
+        return -1;
     }
     int id= f->ids[f->inicio];
     f->inicio= (f->inicio+1)%f->tamanho_max;

@@ -2,7 +2,7 @@
 
 int main(){
 
-    Graph *g1= create_graph(10);
+    Graph *g1= create_graph(5);
     
     
 

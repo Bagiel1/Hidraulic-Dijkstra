@@ -91,8 +91,6 @@ void remove_connect(Graph *g, int from_node, int to_node){
     printf("Não encontrado essa ligacao");
 }
 
-
-
 void destroy_graph(Graph *g){
     if(g == NULL){
         return;
@@ -163,6 +161,7 @@ int set_data(Graph *g, int id, char *nome, float altura){
     }
     
     strcpy(v->nome, nome);
+    return 1;
 }
 
 int add_edge(Graph *g, int from_node, int to_node, float resistencia){
@@ -194,6 +193,20 @@ int hasEdge(Graph *g, int from_node, int to_node){
         cano= cano->proximo;
     }
     return 0;
+}
+
+void add_cano_com_altura(Graph *g, int id_A, int id_B, float resistencia){
+    float altura_A= g->vertices[id_A].altura;
+    float altura_B= g->vertices[id_B].altura;
+
+    if(altura_A > altura_B){
+        add_edge(g, id_A, id_B, resistencia);
+    }else if(altura_B > altura_B){
+        add_edge(g, id_B, id_A, resistencia);
+    }else{
+        add_edge(g, id_A, id_B, resistencia);
+        add_edge(g, id_B, id_A, resistencia);
+    }
 }
 
 void djisktra(Graph *g, int origem, float *distancias, int *predecessor){
@@ -290,4 +303,22 @@ bool *alcancaveis(Graph *g, int origem){
     }
     encerrarFila(f);
     return visitados;
+}
+
+
+void imprimir_caminho_djisktra(Graph *g, int destino, int *predecessor){
+    Pilha *p= create_pilha(g->numnodes);
+    push(p, destino);
+
+    int proximo= predecessor[destino];
+    while(proximo != -1){
+        push(p, proximo);
+        proximo= predecessor[proximo];
+    }
+
+    while(!pilha_vazia(p)){
+        printf("%d -> ", pop(p));
+    }
+    
+
 }
