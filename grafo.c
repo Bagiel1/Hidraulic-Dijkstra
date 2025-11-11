@@ -2,12 +2,22 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <float.h>
 #include "grafo.h"
+#include "pq.h"
+#include "fila.h"
+#include "pilha.h"
 
 typedef enum{
     TIPO_JUNÇÃO,
     TIPO_RESERVATORIO
 } TipoVertice;
+
+struct cano{
+    int destino;
+    float resistencia;
+    struct Cano *proximo;
+};
 
 struct reservatorio{
     float capacidade;
@@ -33,7 +43,7 @@ struct vertice{
 struct graph{
     int numnodes;
     Vertice *vertices;
-    float **edges;
+    Cano **list_adj;
 };
 
 
@@ -44,21 +54,13 @@ Graph *create_graph(int numnodes){
     }
 
     g->numnodes= numnodes;
-    g->edges= calloc(sizeof(float*), g->numnodes);
+    g->list_adj= calloc(g->numnodes,sizeof(Cano*));
     g->vertices= calloc(sizeof(Vertice), g->numnodes);
-    if(g->edges == NULL || g->vertices == NULL){
+    if(g->list_adj == NULL || g->vertices == NULL){
         free(g->vertices);
-        free(g->edges);
+        free(g->list_adj);
         free(g);
         return NULL;
-    }
-
-    for(int i=0; i<g->numnodes; i++){
-        g->edges[i]= calloc(sizeof(float), g->numnodes);
-        if(g->edges[i] == NULL){
-            destroy_graph(g);
-            return NULL;
-        }
     }
     
     for(int i=0; i<numnodes; i++){
@@ -70,39 +72,42 @@ Graph *create_graph(int numnodes){
 
 }
 
-int set_data(Graph *g, int id, char nome[], float altura){
-    if(g == NULL || id < 0 || id >= g->numnodes){
-        return 0;
+void remove_connect(Graph *g, int from_node, int to_node){
+    Cano *cano= g->list_adj[from_node];
+    Cano *cano_aux= NULL;
+    while(cano != NULL){
+        if(cano->destino == to_node){
+            if(cano_aux == NULL){
+                g->list_adj[from_node]= cano->proximo;
+            }else{
+                cano_aux->proximo= cano->proximo;
+            }
+            free(cano);
+            return;
+        }
+        cano_aux= cano;
+        cano= cano->proximo;
     }
-
-    Vertice *v= &g->vertices[id];
-    v->altura= altura;
-
-    if(v->nome != NULL){
-        free(v->nome);
-    }
-
-    v->nome= (char*)malloc(strlen(nome)+1);
-    if(v->nome == NULL){
-        return 0;
-    }
-
-    strcpy(v->nome, nome);
-    return 1;
+    printf("Não encontrado essa ligacao");
 }
+
+
 
 void destroy_graph(Graph *g){
     if(g == NULL){
         return;
     }
 
-    if(g->edges != NULL){
+    if(g->list_adj != NULL){
         for(int i=0; i<g->numnodes; i++){
-            if(g->edges[i] != NULL){
-                free(g->edges[i]);
+            Cano *cano= g->list_adj[i];
+            while(cano != NULL){
+                Cano *cano_liberar= cano;
+                cano= cano->proximo;
+                free(cano_liberar);
             }
         }
-    free(g->edges);
+        free(g->list_adj);
     }
 
     if(g->vertices != NULL){
@@ -130,15 +135,35 @@ void print_graph(Graph *g){
     printf("\n");
 
     for(int from=0; from<g->numnodes; from++){
-        for(int to=0; to<g->numnodes; to++){
-            if(g->edges[from][to] > 0){
-                printf("%d -> %d, resistencia: %.1f\n", from, to, g->edges[from][to]);
-            }
+        Cano *cano= g->list_adj[from];
+        while(cano != NULL){
+            printf("%d -> %d, resistencia: %.1f\n", from, cano->destino, cano->resistencia);
+            cano= cano->proximo;
         }
     }
     printf("}\n");
 }
 
+int set_data(Graph *g, int id, char *nome, float altura){
+    if(g == NULL || id < 0 || id >= g->numnodes){
+        return 0;
+    }
+
+    Vertice *v= &g->vertices[id];
+    v->altura= altura;
+
+    if(v->nome != NULL){
+        free(v->nome);
+        v->nome= NULL;
+    }
+
+    v->nome= (char*)malloc(strlen(nome) + 1);
+    if(v->nome == NULL){
+        return 0;
+    }
+    
+    strcpy(v->nome, nome);
+}
 
 int add_edge(Graph *g, int from_node, int to_node, float resistencia){
 
@@ -149,11 +174,120 @@ int add_edge(Graph *g, int from_node, int to_node, float resistencia){
         return 0;
     }
 
-    g->edges[from_node][to_node]= resistencia;
+    
+
+    Cano *cano_novo= (Cano*)malloc(sizeof(Cano));
+    cano_novo->destino= to_node;
+    cano_novo->proximo= g->list_adj[from_node];
+    cano_novo->resistencia= resistencia;
+    g->list_adj[from_node]= cano_novo;
     
     return 1;
 }
 
 int hasEdge(Graph *g, int from_node, int to_node){
-    return g->edges[from_node][to_node] > 0;
+    Cano *cano= g->list_adj[from_node];
+    while(cano != NULL){
+        if(cano->destino == to_node){
+            return 1;
+        }
+        cano= cano->proximo;
+    }
+    return 0;
+}
+
+void djisktra(Graph *g, int origem, float *distancias, int *predecessor){
+    FilaPrio *pq= create_pq(g->numnodes);
+    bool *visitados= (bool*)calloc(g->numnodes, sizeof(bool));
+
+    for(int i=0; i<g->numnodes; i++){
+        distancias[i]= FLT_MAX;
+        predecessor[i]= -1;
+        visitados[i]= false;
+    }
+    distancias[origem]= 0.0;
+    insere(pq, origem, 0.0);
+
+    while(!pq_vazia(pq)){
+        int atual= remove_min(pq);
+
+        if(atual == -1) break;
+
+        if(visitados[atual]) continue;
+
+        visitados[atual]= true;
+
+        Cano *cano= g->list_adj[atual];
+        while(cano != NULL){
+            int vizinho= cano->destino;
+            float resistencia_cano= cano->resistencia;
+            float nova_dist= distancias[atual] + resistencia_cano;
+
+            if(nova_dist < distancias[vizinho]){
+                distancias[vizinho]= nova_dist;
+                predecessor[vizinho]= atual;
+                insere(pq, vizinho, nova_dist);
+            }
+            cano= cano->proximo;
+        }
+    }
+    destroy_pq(pq);
+    free(visitados);
+}
+
+void BFS(Graph *g, int origem, int *predecessor){
+    Fila *f= criarFila(g->numnodes);
+    bool *visitados= (bool*)calloc(g->numnodes, sizeof(bool));
+
+    for(int i=0; i<g->numnodes; i++){
+        predecessor[i]= -1;
+    }
+
+    visitados[origem]= true;
+    enfileirar(f, origem);
+
+    while(!filaVazia(f)){
+        int atual= desenfileirar(f);
+        
+        if(atual == -1) break;
+
+        Cano *cano= g->list_adj[atual];
+        while(cano != NULL){
+            int vizinho= cano->destino;
+
+            if(visitados[vizinho] == false){
+                visitados[vizinho] = true;
+                predecessor[vizinho] = atual;
+
+                enfileirar(f, vizinho);
+            }
+            cano= cano->proximo;
+        }
+    }
+    encerrarFila(f);
+    free(visitados);
+}
+
+bool *alcancaveis(Graph *g, int origem){
+    Fila *f= criarFila(g->numnodes);
+
+    bool *visitados= (bool*)calloc(g->numnodes, sizeof(bool));
+    visitados[origem]= true;
+    enfileirar(f, origem);
+
+    while(!filaVazia(f)){
+        int atual= desenfileirar(f);
+        Cano *cano= g->list_adj[atual];
+
+        while(cano != NULL){
+            int vizinho= cano->destino;
+            if(visitados[vizinho] == false){
+                visitados[vizinho] = true;
+                enfileirar(f, vizinho);
+            }
+            cano= cano->proximo;
+        }
+    }
+    encerrarFila(f);
+    return visitados;
 }

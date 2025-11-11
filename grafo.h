@@ -3,6 +3,7 @@ typedef struct graph Graph;
 typedef struct vertice Vertice;
 typedef struct reservatorio Reservatorio;
 typedef struct dadosjuncao DadosJuncao;
+typedef struct cano Cano;
 
 Graph *create_graph(int numnodes);
 void destroy_graph(Graph *g);

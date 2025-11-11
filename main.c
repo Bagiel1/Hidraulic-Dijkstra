@@ -3,8 +3,8 @@
 int main(){
 
     Graph *g1= create_graph(10);
-
-    add_edge(g1, 0, 1);
+    
+    
 
     print_graph(g1);
 
