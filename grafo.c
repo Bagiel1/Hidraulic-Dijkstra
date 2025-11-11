@@ -8,45 +8,6 @@
 #include "fila.h"
 #include "pilha.h"
 
-typedef enum{
-    TIPO_JUNÇÃO,
-    TIPO_RESERVATORIO
-} TipoVertice;
-
-struct cano{
-    int destino;
-    float resistencia;
-    struct Cano *proximo;
-};
-
-struct reservatorio{
-    float capacidade;
-    float atual;
-};
-
-struct dadosjuncao{
-    int tipoJuncao;
-};
-
-struct vertice{
-    int id;
-    float altura;
-    char *nome;
-    TipoVertice tipo;   
-
-    union{
-        Reservatorio reservatorio;
-        DadosJuncao juncao;
-    }dados;
-};
-
-struct graph{
-    int numnodes;
-    Vertice *vertices;
-    Cano **list_adj;
-};
-
-
 Graph *create_graph(int numnodes){
     Graph *g= (Graph*)malloc(sizeof(Graph));
     if(g == NULL){

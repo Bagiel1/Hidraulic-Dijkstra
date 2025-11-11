@@ -8,6 +8,13 @@ struct fila{
     int tamanho_max;
 };
 
+int filaCheia(Fila *f){
+    return(f->count == f->tamanho_max);
+}
+int filaVazia(Fila *f){
+    return(f->count == 0);
+}
+
 Fila *criarFila(int tamanho){
     Fila *f= (Fila*)malloc(sizeof(Fila));
     f->ids= (int*)calloc(tamanho, sizeof(int));
@@ -42,12 +49,6 @@ int desenfileirar(Fila *f){
     return id;
 }
 
-int filaCheia(Fila *f){
-    return(f->count == f->tamanho_max);
-}
-int filaVazia(Fila *f){
-    return(f->count == 0);
-}
 
 void encerrarFila(Fila *f){
     free(f->ids);
