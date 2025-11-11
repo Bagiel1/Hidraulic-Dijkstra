@@ -201,7 +201,7 @@ void add_cano_com_altura(Graph *g, int id_A, int id_B, float resistencia){
 
     if(altura_A > altura_B){
         add_edge(g, id_A, id_B, resistencia);
-    }else if(altura_B > altura_B){
+    }else if(altura_B > altura_A){
         add_edge(g, id_B, id_A, resistencia);
     }else{
         add_edge(g, id_A, id_B, resistencia);
@@ -306,7 +306,7 @@ bool *alcancaveis(Graph *g, int origem){
 }
 
 
-void imprimir_caminho_djisktra(Graph *g, int destino, int *predecessor){
+void imprimir_caminho_pilha(Graph *g, int destino, int *predecessor){
     Pilha *p= create_pilha(g->numnodes);
     push(p, destino);
 
@@ -320,5 +320,50 @@ void imprimir_caminho_djisktra(Graph *g, int destino, int *predecessor){
         printf("%d -> ", pop(p));
     }
     
+    encerrarPilha(p);
+}
 
+float get_resistencia(Graph *g, int from_node, int to_node){
+    Cano *cano= g->list_adj[from_node];
+
+    while(cano != NULL){
+        if(cano->destino == to_node){
+            return cano->resistencia;
+        }
+        cano= cano->proximo;
+    }
+    return -1.0;
+}
+
+void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to){
+    
+    float resistencia_cano= get_resistencia(g, cano_from, cano_to);
+    if(resistencia_cano == -1.0){
+        return;
+    }
+
+    printf("\n--- Analisando Corte de Água no Cano (%d -> %d) ---\n", cano_from, cano_to);
+
+    bool *alcancaveis_antes= alcancaveis(g, origem);
+
+    printf("Removendo o cano %d -> %d...\n", cano_from, cano_to);
+    remove_connect(g, cano_from, cano_to);
+
+    bool* alcancaveis_depois = alcancaveis(g, origem);
+    printf("Relatório de Abastecimento:\n");
+    bool algum_corte = false;
+    for(int i=0; i<g->numnodes; i++){
+        if(alcancaveis_antes[i] == true && alcancaveis_depois[i] == false){
+            printf("O Nó %d (%s) ficou sem agua!\n", i, g->vertices[i].nome);
+            algum_corte= true;
+        }
+    }
+    if(!algum_corte){
+        printf("Nenhum nó perdeu o abastecimento (provavelmente existe uma rota alternativa).\n");
+    }
+    
+    add_edge(g, cano_from, cano_to, resistencia_cano);
+
+    free(alcancaveis_antes);
+    free(alcancaveis_depois);
 }
