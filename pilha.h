@@ -10,3 +10,5 @@ void encerrarPilha(Pilha* pilha); // imprimir todo conteudo da pilha, do topo pa
 
 int pilha_vazia(Pilha* pilha);
 
+void print_pilhaContrario(Pilha *pilha);
+

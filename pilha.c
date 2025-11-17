@@ -6,25 +6,37 @@
 #define TAM_PILHA 100
 
 struct pilha{
- int topo;
- int itens[TAM_PILHA];
+    int topo;
+    int *itens;
+    int capacidade;
 };
 
 // aloca um bloco de memória dinamicamente (com tamanho da pilha)
 // para um ponteiro do tipo da pilha apontar, 
 // inicializando topo = -1 (pilha vazia)
-Pilha* create_pilha() {
+Pilha* create_pilha(int capacidade) {
     Pilha* p = (Pilha*)malloc(sizeof(Pilha));
     if (p == NULL) {
         printf("Erro ao alocar memória para a pilha.\n");
         exit(1);
     }
-    p->topo = -1;
+    p->itens= (int*)malloc(capacidade * sizeof(int));
+    if(p->itens == NULL){
+        free(p);
+        exit(1);
+    }
+    p->capacidade= capacidade;
+    p->topo= -1;
     return p;
 }
 
 // empilha os termos (coloca no topo)
 void push(Pilha* pilha, int id) {
+    if(pilha->topo + 1 >= pilha->capacidade){
+        printf("ERRO: Estouro de Pilha\n");
+        return;
+    }
+
     pilha->topo++;
     pilha->itens[pilha->topo] = id;
 
@@ -32,6 +44,10 @@ void push(Pilha* pilha, int id) {
 
 // retira o termo do topo e imprime o valor
 int pop(Pilha* pilha) {
+    if(pilha_vazia(pilha)){
+        printf("ERRO: Pilha vazia\n");
+        return -1;
+    }
     int id = pilha->itens[pilha->topo];
     pilha->topo--;
 
@@ -42,11 +58,18 @@ int pilha_vazia(Pilha* pilha){
     return pilha->topo==-1;
 }
 
+void print_pilhaContrario(Pilha *pilha){
+    for(int i=0; i<=pilha->topo; i++){
+        printf("%d", pilha->itens[i]);
+        if(i < pilha->topo){
+            printf(" -> ");
+        }
+    }
+}
+
 // encerra e imprime todos os valores da pilha (do topo até a base)
 void encerrarPilha(Pilha* pilha) {
-    printf("Pilha: ");
-    for (int i = pilha->topo; i >= 0; i--) {
-        printf("%.2f ", pilha->itens[i]);
-    }
-    printf("\n");
+    if(pilha == NULL) return;
+    free(pilha->itens);
+    free(pilha);
 }

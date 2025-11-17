@@ -161,12 +161,28 @@ void add_cano_com_altura(Graph *g, int id_A, int id_B, float resistencia){
     float altura_B= g->vertices[id_B].altura;
 
     if(altura_A > altura_B){
-        add_edge(g, id_A, id_B, resistencia);
+        float resistencia_final= resistencia;
+        if(g->vertices[id_B].tipo == TIPO_RESERVATORIO){
+            resistencia_final += g->vertices[id_B].dados.reservatorio.capacidade * 0.001;
+        }
+        add_edge(g, id_A, id_B, resistencia_final);
     }else if(altura_B > altura_A){
-        add_edge(g, id_B, id_A, resistencia);
+        float resistencia_final= resistencia;
+        if(g->vertices[id_A].tipo == TIPO_RESERVATORIO){
+            resistencia_final += g->vertices[id_A].dados.reservatorio.capacidade * 0.001;
+        }
+        add_edge(g, id_B, id_A, resistencia_final);
     }else{
-        add_edge(g, id_A, id_B, resistencia);
-        add_edge(g, id_B, id_A, resistencia);
+        float resistencia_final1= resistencia;
+        float resistencia_final2= resistencia;
+        if(g->vertices[id_A].tipo == TIPO_RESERVATORIO){
+            resistencia_final2 += g->vertices[id_A].dados.reservatorio.capacidade * 0.001;
+        }
+        if(g->vertices[id_B].tipo == TIPO_RESERVATORIO){
+            resistencia_final1 += g->vertices[id_B].dados.reservatorio.capacidade * 0.001;
+        }
+        add_edge(g, id_A, id_B, resistencia_final1);
+        add_edge(g, id_B, id_A, resistencia_final2);
     }
 }
 
@@ -296,6 +312,76 @@ float get_resistencia(Graph *g, int from_node, int to_node){
     return -1.0;
 }
 
+void dfs_recursive(Graph *g, int origem, int destino, bool *visitados, Pilha *p){
+    if(origem == destino){
+        push(p, origem);
+        print_pilhaContrario(p);
+        printf("\n");
+        pop(p);
+        return;
+    }
+    push(p, origem);
+    visitados[origem]= true;
+    Cano *cano= g->list_adj[origem];
+    while(cano != NULL){
+        if(visitados[cano->destino] == false){
+            dfs_recursive(g, cano->destino, destino, visitados, p);
+        }
+        cano= cano->proximo;
+    }
+    visitados[origem]= false;
+    pop(p);
+
+    return;
+}
+
+void prim(Graph *g, int origem, float *distancias, int *predecessor){
+    FilaPrio *pq= create_pq(g->numnodes);
+    bool *visitados= (bool*)calloc(g->numnodes, sizeof(bool));
+
+    for(int i=0; i<g->numnodes; i++){
+        distancias[i]= FLT_MAX;
+        predecessor[i]= -1;
+        visitados[i]= false;
+    }
+    distancias[origem]= 0.0;
+    insere(pq, origem, 0.0);
+
+    while(!pq_vazia(pq)){
+        int atual= remove_min(pq);
+
+        if(atual == -1) break;
+
+        if(visitados[atual]) continue;
+
+        visitados[atual]= true;
+
+        Cano *cano= g->list_adj[atual];
+        while(cano != NULL){
+            int vizinho= cano->destino;
+            float resistencia_cano= cano->resistencia;
+
+            if(resistencia_cano < distancias[vizinho]){
+                distancias[vizinho]= resistencia_cano;
+                predecessor[vizinho]= atual;
+                insere(pq, vizinho, resistencia_cano);
+            }
+            cano= cano->proximo;
+        }
+    }
+    destroy_pq(pq);
+    free(visitados);
+}
+
+void DFS(Graph *g, int origem, int destino){
+    Pilha *p= create_pilha();
+    bool *visitados= (bool*)calloc(g->numnodes, sizeof(bool));
+    dfs_recursive(g, origem, destino, visitados, p);
+    encerrarPilha(p);
+    free(visitados);
+    printf("\n");
+}
+
 void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to){
     
     float resistencia_cano= get_resistencia(g, cano_from, cano_to);
@@ -315,12 +401,12 @@ void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to){
     bool algum_corte = false;
     for(int i=0; i<g->numnodes; i++){
         if(alcancaveis_antes[i] == true && alcancaveis_depois[i] == false){
-            printf("O Nó %d (%s) ficou sem agua!\n", i, g->vertices[i].nome);
+            printf("O No %d (%s) ficou sem agua!\n", i, g->vertices[i].nome);
             algum_corte= true;
         }
     }
     if(!algum_corte){
-        printf("Nenhum nó perdeu o abastecimento (provavelmente existe uma rota alternativa).\n");
+        printf("Nenhum no perdeu o abastecimento (provavelmente existe uma rota alternativa).\n");
     }
     
     add_edge(g, cano_from, cano_to, resistencia_cano);

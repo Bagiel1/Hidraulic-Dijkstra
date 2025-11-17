@@ -10,7 +10,7 @@ int main(){
     int numnodes, from_node, to_node, destino, tipo;
     char nome[20];
     float altura, resistencia, capacidade;
-    printf("Escolha quantos vértices terá: ");
+    printf("Escolha quantos vertices tera: ");
     scanf("%d", &numnodes);
 
     float *distancias= (float*)calloc(numnodes, sizeof(float));
@@ -45,7 +45,7 @@ int main(){
             break;
         }else if(strcmp(comando, "print") == 0){
             print_graph(g);
-        }else if(strcmp(comando, "remove") == 0){
+        }else if(strcmp(comando, "remover") == 0){
             scanf("%d %d", &from_node, &to_node);
             remove_connect(g, from_node, to_node);
         }else if(strcmp(comando, "tem") == 0){
@@ -72,6 +72,10 @@ int main(){
             printf("Escolha quem vai ser cortado: ");
             scanf("%d %d", &from_node, &to_node);
             analisar_corte_agua(g, 0, from_node, to_node);
+        }else if(strcmp(comando, "dfs") == 0){
+            printf("Escolha o destino: ");
+            scanf("%d", &destino);
+            DFS(g, 0, destino);
         }
     }
 
