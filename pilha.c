@@ -73,3 +73,18 @@ void encerrarPilha(Pilha* pilha) {
     free(pilha->itens);
     free(pilha);
 }
+
+
+int pilha_get_tamanho(Pilha *p){
+    if(pilha_vazia(p)){
+        return 0;
+    }
+    return p->topo + 1;
+}
+
+
+void adicionar_caminhos(Pilha *p, int *caminhos){
+    for(int i=0; i<=p->topo; i++){
+        caminhos[i]= p->itens[i];
+    }
+}

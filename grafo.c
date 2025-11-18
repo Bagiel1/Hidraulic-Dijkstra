@@ -7,6 +7,7 @@
 #include "pq.h"
 #include "fila.h"
 #include "pilha.h"
+#include "abb.h"
 
 Graph *create_graph(int numnodes){
     Graph *g= (Graph*)malloc(sizeof(Graph));
@@ -335,6 +336,32 @@ void dfs_recursive(Graph *g, int origem, int destino, bool *visitados, Pilha *p)
     return;
 }
 
+void dfs_abb(Graph *g, int origem, int destino, bool *visitados, Pilha *p, Arvore *abb, float custo_total){
+    if(origem == destino){
+        push(p, origem);
+        int tamanho= pilha_get_tamanho(p);
+        int *caminho= (int*)calloc(tamanho, sizeof(int));
+        adicionar_caminhos(p, caminho);
+        adicionar(abb, custo_total, caminho, tamanho);
+        pop(p);
+        return;
+    }
+    push(p, origem);
+    visitados[origem]= true;
+    Cano *cano= g->list_adj[origem];
+    while(cano != NULL){
+        if(visitados[cano->destino] == false){
+            float novo_custo= custo_total + cano->resistencia;
+            dfs_abb(g, cano->destino, destino, visitados, p, abb, novo_custo);
+        }
+        cano= cano->proximo;
+    }
+    visitados[origem]= false;
+    pop(p);
+
+    return;
+}
+
 void prim(Graph *g, int origem, float *distancias, int *predecessor){
     FilaPrio *pq= create_pq(g->numnodes);
     bool *visitados= (bool*)calloc(g->numnodes, sizeof(bool));
@@ -373,10 +400,14 @@ void prim(Graph *g, int origem, float *distancias, int *predecessor){
     free(visitados);
 }
 
-void DFS(Graph *g, int origem, int destino){
+void DFS(Graph *g, int origem, int destino, int qual, Arvore *abb){
     Pilha *p= create_pilha();
     bool *visitados= (bool*)calloc(g->numnodes, sizeof(bool));
-    dfs_recursive(g, origem, destino, visitados, p);
+    if(qual == 1){
+        dfs_recursive(g, origem, destino, visitados, p);
+    }else if(qual == 2){
+        dfs_abb(g, origem, destino, visitados, p, abb, 0);
+    }
     encerrarPilha(p);
     free(visitados);
     printf("\n");

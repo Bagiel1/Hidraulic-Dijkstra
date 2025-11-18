@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include "abb.h"
 
 typedef enum {
     TIPO_JUNÇÃO,
@@ -55,4 +56,5 @@ void BFS(Graph *g, int origem, int *predecessor);
 bool *alcancaveis(Graph *g, int origem);
 void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to);
 void imprimir_caminho_pilha(Graph *g, int destino, int *predecessor);
-void DFS(Graph *g, int origem, int destino);
+void DFS(Graph *g, int origem, int destino, int qual, Arvore *abb);
+void prim(Graph *g, int origem, float *distancias, int *predecessor);

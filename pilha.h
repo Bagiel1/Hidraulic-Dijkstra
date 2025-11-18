@@ -12,3 +12,7 @@ int pilha_vazia(Pilha* pilha);
 
 void print_pilhaContrario(Pilha *pilha);
 
+int pilha_get_tamanho(Pilha *p);
+
+void adicionar_caminhos(Pilha *p, int *caminhos);
+

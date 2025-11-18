@@ -9,7 +9,7 @@ int main(){
 
     int numnodes, from_node, to_node, destino, tipo;
     char nome[20];
-    float altura, resistencia, capacidade;
+    float altura, resistencia, capacidade, resistencia_busca;
     printf("Escolha quantos vertices tera: ");
     scanf("%d", &numnodes);
 
@@ -20,6 +20,7 @@ int main(){
     char comando[20];
 
     Graph *g= create_graph(numnodes);
+    Arvore *abb= criarABB();
 
     printf("Coloque o nome, altura e tipo (1 ou 2) para todos os nos:\n");
     for(int i=0; i<numnodes; i++){
@@ -75,7 +76,23 @@ int main(){
         }else if(strcmp(comando, "dfs") == 0){
             printf("Escolha o destino: ");
             scanf("%d", &destino);
-            DFS(g, 0, destino);
+            DFS(g, 0, destino, 1, abb);
+        }else if(strcmp(comando, "prim") == 0){
+            prim(g, 0, distancias, predecessorDji);
+        }else if(strcmp(comando, "buscarResistencia") == 0){
+            printf("Selecione o Destino e a Resistencia buscada: ");
+            scanf("%d", &destino, &resistencia_busca);
+            DFS(g, 0, destino, 2, abb);
+            No *busca= buscar(abb, resistencia_busca);
+            int *caminho= get_caminho_do_no(busca);
+            int tamanho= get_tamanho_do_no(busca);
+
+            for(int i=0; i<tamanho; i++){
+                printf("%d", caminho[i]);
+                if(i < tamanho - 1){
+                    printf(" -> ");
+                }
+            }
         }
     }
 
