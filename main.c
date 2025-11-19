@@ -12,6 +12,7 @@ int main(){
     float altura, resistencia, capacidade, resistencia_busca;
     printf("Escolha quantos vertices tera: ");
     scanf("%d", &numnodes);
+    getchar();
 
     float *distancias= (float*)calloc(numnodes, sizeof(float));
     int *predecessorDji= (int*)calloc(numnodes, sizeof(int));
@@ -25,7 +26,7 @@ int main(){
     printf("Coloque o nome, altura e tipo (1 ou 2) para todos os nos:\n");
     for(int i=0; i<numnodes; i++){
         printf("No %d:\n", i);
-        scanf("%s %f %d", nome, &altura, &tipo);
+        scanf(" %s %f %d", nome, &altura, &tipo);
         set_data(g, i, nome, altura);
         if(tipo == 1){
             g->vertices[i].tipo= TIPO_JUNÇÃO;
@@ -79,13 +80,19 @@ int main(){
             DFS(g, 0, destino, 1, abb);
         }else if(strcmp(comando, "prim") == 0){
             prim(g, 0, distancias, predecessorDji);
+            imprimir_arestas_prim(g, predecessorDji);
         }else if(strcmp(comando, "buscarResistencia") == 0){
-            printf("Selecione o Destino e a Resistencia buscada: ");
-            scanf("%d", &destino, &resistencia_busca);
-            DFS(g, 0, destino, 2, abb);
+            printf("Selecione a Origem, Destino e a Resistencia buscada: \n");
+            scanf("%d %d %f", &destino, &from_node, &resistencia_busca);
+            DFS(g, from_node, destino, 2, abb);
             No *busca= buscar(abb, resistencia_busca);
             int *caminho= get_caminho_do_no(busca);
             int tamanho= get_tamanho_do_no(busca);
+
+            if(caminho == NULL){
+                printf("Nao encontrado esse caminho!\n");
+                continue;
+            }
 
             for(int i=0; i<tamanho; i++){
                 printf("%d", caminho[i]);
@@ -93,8 +100,15 @@ int main(){
                     printf(" -> ");
                 }
             }
+        }else if(strcmp(comando, "vis") == 0){
+            printf("Escolha o destino: ");
+            scanf("%d", &destino);
+            djisktra(g, 0, distancias, predecessorDji);
+            BFS(g, 0, predecessorBFS);
+            exportar_json(g, predecessorDji, predecessorBFS, destino);
         }
     }
+
 
 
     return 0;

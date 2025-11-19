@@ -1,0 +1,21 @@
+6
+torneira1 10 1 
+torneira2 10 1
+torneira3 10 1 
+torneira4 10 1
+torneira5 10 1
+torneira6 10 1
+adicionar 0 2 1
+adicionar 2 1 2.5
+adicionar 1 0 6
+adicionar 0 3 3.5
+adicionar 2 3 2
+adicionar 3 5 4
+adicionar 5 2 4.5
+adicionar 2 4 6
+adicionar 5 4 3
+adicionar 4 1 5
+print
+buscarResistencia
+0 4 11
+sair

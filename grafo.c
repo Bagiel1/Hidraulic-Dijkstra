@@ -301,6 +301,17 @@ void imprimir_caminho_pilha(Graph *g, int destino, int *predecessor){
     encerrarPilha(p);
 }
 
+void imprimir_arestas_prim(Graph *g, int *predecessor){
+    
+    printf("Arestas da Arvore Geradora Minima (Prim):\n");
+
+    for(int i = 0; i < g->numnodes; i++) {
+        if(predecessor[i] != -1) {
+            printf("%d -> %d\n", predecessor[i], i);
+        }
+    }
+}
+
 float get_resistencia(Graph *g, int from_node, int to_node){
     Cano *cano= g->list_adj[from_node];
 
@@ -396,12 +407,14 @@ void prim(Graph *g, int origem, float *distancias, int *predecessor){
             cano= cano->proximo;
         }
     }
+
     destroy_pq(pq);
     free(visitados);
 }
 
+
 void DFS(Graph *g, int origem, int destino, int qual, Arvore *abb){
-    Pilha *p= create_pilha();
+    Pilha *p= create_pilha(g->numnodes);
     bool *visitados= (bool*)calloc(g->numnodes, sizeof(bool));
     if(qual == 1){
         dfs_recursive(g, origem, destino, visitados, p);
@@ -444,4 +457,50 @@ void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to){
 
     free(alcancaveis_antes);
     free(alcancaveis_depois);
+}
+
+
+void exportar_json(Graph *g, int* pred_dijkstra, int* pred_bfs, int destino) {
+    FILE *f = fopen("saida.json", "w");
+    if (f == NULL) return;
+
+    fprintf(f, "{\n");
+    
+    fprintf(f, "  \"nodes\": [\n");
+    for (int i = 0; i < g->numnodes; i++) {
+        char *color = (g->vertices[i].tipo == TIPO_RESERVATORIO) ? "#97C2FC" : "#E0E0E0";
+        fprintf(f, "    {\"id\": %d, \"label\": \"%s\\n(Alt: %.1f)\", \"color\": \"%s\"}%s\n", 
+                i, g->vertices[i].nome, g->vertices[i].altura, color, 
+                (i == g->numnodes - 1) ? "" : ",");
+    }
+    fprintf(f, "  ],\n");
+
+    
+    fprintf(f, "  \"edges\": [\n");
+    int primeiro = 1;
+    for (int i = 0; i < g->numnodes; i++) {
+        Cano *cano = g->list_adj[i];
+        while (cano != NULL) {
+            if (!primeiro) fprintf(f, ",\n");
+            fprintf(f, "    {\"from\": %d, \"to\": %d, \"label\": \"%.1f\", \"id\": \"%d-%d\"}", 
+                    i, cano->destino, cano->resistencia, i, cano->destino);
+            primeiro = 0;
+            cano = cano->proximo;
+        }
+    }
+    fprintf(f, "\n  ],\n");
+
+    fprintf(f, "  \"pred_dijkstra\": [");
+    for(int i=0; i < g->numnodes; i++) fprintf(f, "%d%s", pred_dijkstra[i], (i<g->numnodes-1)?",":"");
+    fprintf(f, "],\n");
+
+    fprintf(f, "  \"pred_bfs\": [");
+    for(int i=0; i < g->numnodes; i++) fprintf(f, "%d%s", pred_bfs[i], (i<g->numnodes-1)?",":"");
+    fprintf(f, "],\n");
+
+    fprintf(f, "  \"destino_escolhido\": %d\n", destino);
+
+    fprintf(f, "}\n");
+    fclose(f);
+    printf("Arquivo 'saida.json' gerado com sucesso!\n");
 }

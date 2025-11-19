@@ -58,3 +58,5 @@ void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to);
 void imprimir_caminho_pilha(Graph *g, int destino, int *predecessor);
 void DFS(Graph *g, int origem, int destino, int qual, Arvore *abb);
 void prim(Graph *g, int origem, float *distancias, int *predecessor);
+void imprimir_arestas_prim(Graph *g, int *predecessor);
+void exportar_json(Graph *g, int *pred_djisktra, int *pred_bfs, int destino);
