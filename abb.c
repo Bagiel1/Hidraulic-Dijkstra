@@ -4,11 +4,16 @@
 #include "abb.h"
 #include "pilha.h"
 
+struct caminho_item{
+    int *caminho;
+    int tamanho;
+    CaminhoItem *proximo;
+};
+
 struct no{          //Struct dos nós da arvore
     float custo;
     No *direita, *esquerda;
-    int *caminho;
-    int tamanho_caminho;
+    CaminhoItem *lista_caminhos;    
 };
 
 struct arvore{      //Struct da árvore em si
@@ -25,43 +30,57 @@ Arvore* criarABB(){        //Aloca a árvore e começa com raiz nula
     return arvore;
 }
 
+CaminhoItem *criar_caminho_item(int *caminho, int tamanho){
+    CaminhoItem *novo= (CaminhoItem*)malloc(sizeof(CaminhoItem));
+    novo->caminho= caminho;
+    novo->tamanho= tamanho;
+    novo->proximo= NULL;
+    return novo;
+}
+
 int adicionar(Arvore *arvore, float custo, int *caminho, int tamanho){     //Faz uma tipo de busca binária, vendo se o código é maior ou menor
-    No *p= (No*)malloc(sizeof(No));                                      //que o ponteiro auxiliar está e atualiza o aux a partir disso
-    if(p == NULL || caminho == NULL){      //Aloca um novo nó
-        return 1;
-    }
+    CaminhoItem *novoItem= criar_caminho_item(caminho, tamanho);
 
-    p->caminho= caminho;
-    p->custo= custo;
-    p->tamanho_caminho= tamanho;
-    p->direita= NULL;
-    p->esquerda= NULL;
-
-    if(arvore->raiz == NULL){       //Se a árvore estiver vazia o nó adicionado vai ser a raíz e pronto
+    if(arvore->raiz == NULL){
+        No *p= (No*)malloc(sizeof(No));       
+        p->custo= custo;
+        p->lista_caminhos= novoItem;
+        p->esquerda= NULL;
+        p->direita= NULL;
         arvore->raiz= p;
-        return 0;    
+        return 0;
     }
+
     No *aux= arvore->raiz;          //Cria ponteiro auxiliar
     while(1){                       //Faz a "busca binária" até achar o ponto onde o novo nó tem que ser adicionado
-        if(aux->custo < custo){
-            if(aux->direita == NULL){
-                aux->direita = p;
-                return 0;
-            }
-            aux= aux->direita;
-
-        }else if(aux->custo > custo){
+        if(custo < aux->custo){
             if(aux->esquerda == NULL){
-                aux->esquerda = p;
+                No *p= (No*)malloc(sizeof(No));
+                p->custo= custo;
+                p->lista_caminhos= novoItem;
+                p->esquerda= NULL;
+                p->direita= NULL;
+                aux->esquerda= p;
                 return 0;
             }
             aux= aux->esquerda;
 
+        }else if(custo > aux->custo){
+            if(aux->esquerda == NULL){
+                No *p= (No*)malloc(sizeof(No));
+                p->custo= custo;
+                p->lista_caminhos= novoItem;
+                p->esquerda= NULL;
+                p->direita= NULL;
+                aux->direita= p;
+                return 0;
+            }
+            aux= aux->direita;
+
         }else if(aux->custo == custo){        //Não adiciona codigos repetidos
-            printf("Custo já existe!\n");
-            free(p->caminho);
-            free(p);
-            return 1;
+            novoItem->proximo= aux->lista_caminhos;
+            aux->lista_caminhos= novoItem;
+            return 0;
         }
     }
 }
@@ -70,9 +89,9 @@ int adicionar(Arvore *arvore, float custo, int *caminho, int tamanho){     //Faz
 No *buscar(Arvore *arvore, float custo){         //Busca o código no nós da arvore, mesmo estilo de "busca binária"
     No *aux= arvore->raiz;                      //Ponteiro auxiliar
     while(aux != NULL){
-        if(aux->custo < custo){
+        if(aux->custo < custo - 0.0001){
             aux= aux->direita;
-        }else if(aux->custo > custo){
+        }else if(aux->custo > custo + 0.0001){
             aux= aux->esquerda;
         }else{
             return aux;
@@ -82,20 +101,37 @@ No *buscar(Arvore *arvore, float custo){         //Busca o código no nós da ar
     return NULL;
 }
 
-void caminho(No *no){
-    for(int i= 0; i<=no->tamanho_caminho; i++){
-        printf("%d");
+void imprimir_caminhos_do_no(No *no){
+    if(no == NULL) return;
+
+    CaminhoItem *item = no->lista_caminhos;
+    int contador = 1;
+
+    while(item != NULL){
+        printf("Opcao %d: ", contador++);
+        for(int i = 0; i < item->tamanho; i++){
+            printf("%d", item->caminho[i]);
+            if(i < item->tamanho - 1) printf(" -> ");
+        }
+        printf("\n");
+        
+        item = item->proximo; 
     }
 }
 
-
 void encerrarNos(No *no){       //Função auxiliar do encerrarArvore que da free em todos os nós individualmente com o método de posordem
     if(no == NULL){
+        encerrarNos(no->esquerda);
+        encerrarNos(no->direita);
         return;
     }
-    encerrarNos(no->esquerda);
-    encerrarNos(no->direita);
-    free(no->caminho);
+    CaminhoItem *item= no->lista_caminhos;
+    while(item != NULL){
+        CaminhoItem *temp= item;
+        item= item->proximo;
+        free(temp->caminho);
+        free(temp);
+    }
     free(no);
 }
 
@@ -108,10 +144,38 @@ void encerrarArvore(Arvore *arvore){        //Encerra a arvore
     free(arvore);
 }
 
-int *get_caminho_do_no(No *no){
-    return no->caminho;
+void buscar_intervalo_recursivo(No *no, float min, float max, int *contador){
+    if(no == NULL){
+        return;
+    }
+    if(no->custo > min){
+        buscar_intervalo_recursivo(no->esquerda, min, max, contador);
+    }
+    if(no->custo >= min && no->custo <= max){
+        printf("\n Resistencia encontrada: %.2f \n", no->custo);
+        imprimir_caminhos_do_no(no); 
+        (*contador)++;
+    }
+    if(no->custo < max){
+        buscar_intervalo_recursivo(no->direita, min, max, contador);
+    }
+
 }
 
-int get_tamanho_do_no(No *no){
-    return no->tamanho_caminho;
+void buscarIntervalo(Arvore *arvore, float min, float max){
+    if(arvore == NULL || arvore->raiz == NULL){
+        printf("Nenhum caminho encontrado na arvore.\n");
+        return;
+    }
+    int encontrados= 0;
+    printf("Buscando caminhos com resistencia entre %.2f e %.2f...\n", min, max);
+
+    buscar_intervalo_recursivo(arvore->raiz, min, max, &encontrados);
+
+    if(encontrados == 0){
+        printf("Nenhum caminho encontrado no intervalo!\n");
+    }else{
+        printf("\nTotal de caminhos unicos encontrados no intervalo: %d\n", encontrados);
+    }
+
 }

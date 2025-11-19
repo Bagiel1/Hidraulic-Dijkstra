@@ -21,7 +21,6 @@ int main(){
     char comando[20];
 
     Graph *g= create_graph(numnodes);
-    Arvore *abb= criarABB();
 
     printf("Coloque o nome, altura e tipo (1 ou 2) para todos os nos:\n");
     for(int i=0; i<numnodes; i++){
@@ -77,35 +76,24 @@ int main(){
         }else if(strcmp(comando, "dfs") == 0){
             printf("Escolha o destino: ");
             scanf("%d", &destino);
+            Arvore *abb= criarABB();
             DFS(g, 0, destino, 1, abb);
+            encerrarArvore(abb);
         }else if(strcmp(comando, "prim") == 0){
             prim(g, 0, distancias, predecessorDji);
             imprimir_arestas_prim(g, predecessorDji);
         }else if(strcmp(comando, "buscarResistencia") == 0){
-            printf("Selecione a Origem, Destino e a Resistencia buscada: \n");
-            scanf("%d %d %f", &destino, &from_node, &resistencia_busca);
+            float min_res, max_res;
+            printf("Selecione a Origem, Destino e o Intervalo de Resistencia (Min Max): \n");
+            scanf("%d %d %f %f", &from_node, &destino, &min_res, &max_res);
+            Arvore *abb= criarABB();
             DFS(g, from_node, destino, 2, abb);
-            No *busca= buscar(abb, resistencia_busca);
-            int *caminho= get_caminho_do_no(busca);
-            int tamanho= get_tamanho_do_no(busca);
-
-            if(caminho == NULL){
-                printf("Nao encontrado esse caminho!\n");
-                continue;
-            }
-
-            for(int i=0; i<tamanho; i++){
-                printf("%d", caminho[i]);
-                if(i < tamanho - 1){
-                    printf(" -> ");
-                }
-            }
+            buscarIntervalo(abb, min_res, max_res);
+            encerrarArvore(abb);
         }else if(strcmp(comando, "vis") == 0){
-            printf("Escolha o destino: ");
-            scanf("%d", &destino);
             djisktra(g, 0, distancias, predecessorDji);
             BFS(g, 0, predecessorBFS);
-            exportar_json(g, predecessorDji, predecessorBFS, destino);
+            exportar_json(g, predecessorDji, predecessorBFS, 0);
         }
     }
 

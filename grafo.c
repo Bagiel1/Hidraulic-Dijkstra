@@ -214,7 +214,7 @@ void djisktra(Graph *g, int origem, float *distancias, int *predecessor){
             float resistencia_cano= cano->resistencia;
             float nova_dist= distancias[atual] + resistencia_cano;
 
-            if(nova_dist < distancias[vizinho]){
+            if(nova_dist < distancias[vizinho]){    
                 distancias[vizinho]= nova_dist;
                 predecessor[vizinho]= atual;
                 insere(pq, vizinho, nova_dist);
@@ -351,7 +351,17 @@ void dfs_abb(Graph *g, int origem, int destino, bool *visitados, Pilha *p, Arvor
     if(origem == destino){
         push(p, origem);
         int tamanho= pilha_get_tamanho(p);
+        if(tamanho <= 0){
+            printf("Caminho inválido (tamanho 0).\n");
+            pop(p);
+            return;
+        }
         int *caminho= (int*)calloc(tamanho, sizeof(int));
+        if(caminho == NULL){
+            printf("Nao conseguiu alocar memória para o caminho.\n");
+            pop(p);
+            return;
+        }
         adicionar_caminhos(p, caminho);
         adicionar(abb, custo_total, caminho, tamanho);
         pop(p);
@@ -399,7 +409,7 @@ void prim(Graph *g, int origem, float *distancias, int *predecessor){
             int vizinho= cano->destino;
             float resistencia_cano= cano->resistencia;
 
-            if(resistencia_cano < distancias[vizinho]){
+            if(!visitados[vizinho] && resistencia_cano < distancias[vizinho]){
                 distancias[vizinho]= resistencia_cano;
                 predecessor[vizinho]= atual;
                 insere(pq, vizinho, resistencia_cano);
@@ -461,7 +471,7 @@ void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to){
 
 
 void exportar_json(Graph *g, int* pred_dijkstra, int* pred_bfs, int destino) {
-    FILE *f = fopen("saida.json", "w");
+    FILE *f = fopen("vis/saida.json", "w");
     if (f == NULL) return;
 
     fprintf(f, "{\n");

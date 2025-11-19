@@ -84,7 +84,12 @@ int pilha_get_tamanho(Pilha *p){
 
 
 void adicionar_caminhos(Pilha *p, int *caminhos){
-    for(int i=0; i<=p->topo; i++){
-        caminhos[i]= p->itens[i];
+    if(p == NULL || p->itens == NULL || caminhos == NULL){
+        printf("[ERRO] Tentativa de copiar pilha invalida ou vetor nulo!\n");
+        return;
+    }
+
+    for(int i=0; i <= p->topo; i++){
+        caminhos[i] = p->itens[i];
     }
 }
