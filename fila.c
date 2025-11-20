@@ -3,21 +3,21 @@
 #include "fila.h"
 
 struct fila{
-    int *ids;
-    int inicio, final, count;
-    int tamanho_max;
+    int *ids; // vetor que guarda elementos
+    int inicio, final, count; // indice do primeiro elemento, do último + 1 (para acrescentar), e a quantidade de elementos
+    int tamanho_max; // capacidade
 };
 
 int filaCheia(Fila *f){
-    return(f->count == f->tamanho_max);
+    return(f->count == f->tamanho_max); // se quantidade de elementos é igual a capacidade máxima da fila
 }
 int filaVazia(Fila *f){
-    return(f->count == 0);
+    return(f->count == 0); // se quantidade de elementos atual é nula
 }
 
 Fila *criarFila(int tamanho){
-    Fila *f= (Fila*)malloc(sizeof(Fila));
-    f->ids= (int*)calloc(tamanho, sizeof(int));
+    Fila *f= (Fila*)malloc(sizeof(Fila)); // aloca um bloco de memória que o ponteiro aponta
+    f->ids= (int*)calloc(tamanho, sizeof(int)); // cria vetor de inteiros, com 0´s (reinicia)
     if(f == NULL){
         return NULL;
     }
@@ -31,26 +31,26 @@ Fila *criarFila(int tamanho){
 
 void enfileirar(Fila *f, int id){
     if(filaCheia(f)){
-        return;
+        return; // verifica se está cheia
     }
-    f->ids[f->final]= id;  
-    f->final= (f->final+1)%f->tamanho_max;
-    f->count++; 
+    f->ids[f->final]= id; // para acrescentar na fila  
+    f->final= (f->final+1)%f->tamanho_max; // para que o final voltar para o começo, fila circular
+    f->count++; // +1 na quantidade
 }
 
 int desenfileirar(Fila *f){
     if(filaVazia(f)){
         printf("Fila vazia");
-        return -1;
+        return -1; // verifica se está vazia
     }
-    int id= f->ids[f->inicio];
-    f->inicio= (f->inicio+1)%f->tamanho_max;
-    f->count--;
+    int id= f->ids[f->inicio]; // para remover do inicio
+    f->inicio= (f->inicio+1)%f->tamanho_max; // mesma coisa do final
+    f->count--; // -1 na quantidade
     return id;
 }
 
 
-void encerrarFila(Fila *f){
+void encerrarFila(Fila *f){ // libera fila
     free(f->ids);
     free(f);
 }

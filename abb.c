@@ -5,18 +5,18 @@
 #include "pilha.h"
 
 struct caminho_item{
-    int *caminho;
-    int tamanho;
-    CaminhoItem *proximo;
+    int *caminho; // vetor do caminho
+    int tamanho; // quantidade de vértices
+    CaminhoItem *proximo; // guarda os caminhos
 };
 
 struct no{          //Struct dos nós da arvore
-    float custo;
-    No *direita, *esquerda;
-    CaminhoItem *lista_caminhos;    
+    float custo; // peso do respectivo nó
+    No *direita, *esquerda; // filhos
+    CaminhoItem *lista_caminhos; // lista dos caminhos    
 };
 
-struct arvore{      //Struct da árvore em si
+struct arvore{      //Struct da árvore em si, para o nó da raiz
     No *raiz;
 };
 
@@ -120,7 +120,7 @@ void imprimir_caminhos_do_no(No *no){
 }
 
 void encerrarNos(No *no){       //Função auxiliar do encerrarArvore que da free em todos os nós individualmente com o método de posordem
-    if(no == NULL){
+    if(no != NULL){
         encerrarNos(no->esquerda);
         encerrarNos(no->direita);
         return;

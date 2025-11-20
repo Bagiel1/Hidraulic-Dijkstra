@@ -5,8 +5,8 @@
 
 #define TAM_PILHA 100
 
-struct pilha{
-    int topo;
+struct pilha{ 
+    int topo; 
     int *itens;
     int capacidade;
 };
@@ -18,9 +18,9 @@ Pilha* create_pilha(int capacidade) {
     Pilha* p = (Pilha*)malloc(sizeof(Pilha));
     if (p == NULL) {
         printf("Erro ao alocar memória para a pilha.\n");
-        exit(1);
+        exit(1); // verificação de segurança
     }
-    p->itens= (int*)malloc(capacidade * sizeof(int));
+    p->itens= (int*)malloc(capacidade * sizeof(int)); // aloca memória para o vetor de itens
     if(p->itens == NULL){
         free(p);
         exit(1);
@@ -55,7 +55,7 @@ int pop(Pilha* pilha) {
 }
 
 int pilha_vazia(Pilha* pilha){
-    return pilha->topo==-1;
+    return pilha->topo==-1; // se o topo é -1, a pilha está vazia
 }
 
 void print_pilhaContrario(Pilha *pilha){
@@ -65,7 +65,7 @@ void print_pilhaContrario(Pilha *pilha){
             printf(" -> ");
         }
     }
-}
+} // imprimi do fundo ao topo da pilha
 
 // encerra e imprime todos os valores da pilha (do topo até a base)
 void encerrarPilha(Pilha* pilha) {
@@ -77,19 +77,19 @@ void encerrarPilha(Pilha* pilha) {
 
 int pilha_get_tamanho(Pilha *p){
     if(pilha_vazia(p)){
-        return 0;
+        return 0; // verifica se a pilha está vazia
     }
-    return p->topo + 1;
+    return p->topo + 1; // retorna tamanho da pilha
 }
 
 
-void adicionar_caminhos(Pilha *p, int *caminhos){
+void adicionar_caminhos(Pilha *p, int *caminhos){ // *caminhos é o vetor onde vamos adicionar os valores
     if(p == NULL || p->itens == NULL || caminhos == NULL){
         printf("[ERRO] Tentativa de copiar pilha invalida ou vetor nulo!\n");
-        return;
+        return;  // verifica se o ponteiro que aponta para a pilha ou para os itens é inexistente
     }
 
     for(int i=0; i <= p->topo; i++){
-        caminhos[i] = p->itens[i];
+        caminhos[i] = p->itens[i]; // armazenando no vetor
     }
-}
+} 

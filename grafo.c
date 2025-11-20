@@ -126,7 +126,7 @@ int set_data(Graph *g, int id, char *nome, float altura){
     return 1;
 }
 
-int add_edge(Graph *g, int from_node, int to_node, float resistencia){
+int add_edge(Graph *g, int from_node, int to_node, float resistencia){ // função auxiliar para add_cano_com_altura
 
     if(g==NULL || from_node<0 || from_node>=g->numnodes || to_node < 0 || to_node >= g->numnodes){
         return 0;

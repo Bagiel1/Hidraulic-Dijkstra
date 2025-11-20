@@ -3,7 +3,7 @@
 #include "pq.h"
 
 
-struct item{
+struct item{ //
     int id;
     float prioridade;
 };
