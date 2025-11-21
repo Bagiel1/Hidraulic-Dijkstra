@@ -1,7 +1,6 @@
 let network;
 let dadosJSON;
 
-// Array para permitir múltiplas águas ao mesmo tempo
 let animacoesAtivas = []; 
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -13,14 +12,35 @@ async function iniciar() {
         catch (e) { response = await fetch('../saida.json'); }
         
         dadosJSON = await response.json();
+
+        let valorFluxo= dadosJSON.max_flow;
+
+        if (valorFluxo !== undefined) {
+            document.getElementById('display-max-flow').innerText = valorFluxo;
+            document.getElementById('status-panel').style.display = "block"; 
+        }
+
         dadosJSON.nodes = dadosJSON.nodes.map(node => {
             let novoLabel = node.label;
-            // Deixa a primeira letra maiúscula pra ficar chique
             novoLabel = novoLabel.charAt(0).toUpperCase() + novoLabel.slice(1);
-            // Troca o espaço antes do '(' por uma quebra de linha
             novoLabel = novoLabel.replace(' (', '\n('); 
             return { ...node, label: novoLabel };
         });
+
+        dadosJSON.edges= dadosJSON.edges.map(edge => {
+            const estiloFinal= {
+                color: edge.color ? edge.color.color : "#848484",
+                width: edge.width || 1
+            };
+            return{
+                ...edge,
+                hiddenColor: estiloFinal.color,
+                hiddenWidth: estiloFinal.width,
+                color: { color: '#cccccc'},
+                width: 2
+            };
+        })
+
         const container = document.getElementById('network');
         
         const data = {
@@ -31,36 +51,35 @@ async function iniciar() {
        const options = {
             nodes: {
                 shape: 'circle',
-                widthConstraint: { minimum: 80, maximum: 80 }, // Mantém o círculo perfeito
+                widthConstraint: { minimum: 80, maximum: 80 }, 
                 color: {
                     background: '#ffffff', 
-                    border: '#111111',     // Borda preta fina
+                    border: '#111111',     
                     highlight: { background: '#f0f0f0', border: '#000000' },
                     hover: { background: '#ffffff', border: '#000000' }
                 },
                 font: {
                     multi: true,
                     size: 16,
-                    // Truque: Usar fontes nativas deixa muito mais nítido que carregar fonte externa
                     face: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-                    color: '#000000',      // Preto absoluto para contraste máximo
+                    color: '#000000',      
                     vadjust: 0,
-                    bold: { color: '#000000' } // Garante que negrito também seja preto
+                    bold: { color: '#000000' } 
                 },
-                borderWidth: 1.5,          // Borda um pouco mais fina para elegância
-                shadow: false              // <--- DESLIGAR SOMBRA (Resolve 90% do borrão)
+                borderWidth: 1.5,          
+                shadow: false              
             },
             edges: {
                 arrows: { 
                     to: { enabled: true, scaleFactor: 0.5 } 
                 },
                 color: { 
-                    color: '#dddddd',      // Cinza bem claro para não poluir
+                    color: '#dddddd',     
                     highlight: '#000000',
                     hover: '#000000',
                     opacity: 1.0
                 }, 
-                width: 1.5,                // Arestas mais finas
+                width: 1.5,              
                 smooth: { 
                     enabled: true, 
                     type: 'continuous',
@@ -69,13 +88,13 @@ async function iniciar() {
                 font: {
                     align: 'top',
                     size: 11,
-                    face: 'Arial, sans-serif', // Fonte simples para leitura rápida
+                    face: 'Arial, sans-serif',
                     color: '#666666',
-                    strokeWidth: 3,        // Borda branca grossa ao redor do texto para "apagar" a linha de baixo
+                    strokeWidth: 3,       
                     strokeColor: '#ffffff',
-                    background: 'none'     // Remove o fundo quadrado, usa o stroke para limpar
+                    background: 'none'     
                 },
-                shadow: false              // Garante que arestas não tenham sombra
+                shadow: false              
             },
             physics: {
                 enabled: true,
@@ -83,7 +102,7 @@ async function iniciar() {
                 forceAtlas2Based: {
                     gravitationalConstant: -120, 
                     centralGravity: 0.005,
-                    springLength: 230,     // Mais espaço entre os nós ajuda na leitura
+                    springLength: 230,     
                     springConstant: 0.08
                 },
                 stabilization: { enabled: true, iterations: 1000 }
@@ -99,19 +118,16 @@ async function iniciar() {
         network.on("click", function (params) {
             if (params.nodes.length > 0) {
                 const idClicado = params.nodes[0];
-                // Preenche o input
                 document.getElementById('input-destino').value = idClicado;
             }
         });
 
-        // --- O PINTOR (CANVAS) ---
         network.on("afterDrawing", function (ctx) {
             animacoesAtivas.forEach(anim => {
-                // Pega posições ATUAIS (respeita se você arrastou o nó)
                 const posOrigem = network.getPositions([anim.noOrigem])[anim.noOrigem];
                 const posDestino = network.getPositions([anim.noDestino])[anim.noDestino];
 
-                if (!posOrigem || !posDestino) return;
+                if(!posOrigem || !posDestino) return;
 
                 const nodeRadius = 20; 
                 const dx = posDestino.x - posOrigem.x;
@@ -121,7 +137,6 @@ async function iniciar() {
                 const ux = dx / distancia;
                 const uy = dy / distancia;
 
-                // Vetor perpendicular para offset lateral
                 const perpX = -uy * anim.offsetLateral;
                 const perpY = ux * anim.offsetLateral;
 
@@ -170,17 +185,26 @@ async function executarCaminho(caminho, cor, offsetLateral) {
     const edgesDataSet = network.body.data.edges; 
 
     for (let passo of caminho) {
-        // Encontra a aresta original (independente da direção)
-        let arestaDadosOriginal = dadosJSON.edges.find(e => 
+        let aresta = dadosJSON.edges.find(e => 
             (e.from == passo.de && e.to == passo.para) || 
             (e.from == passo.para && e.to == passo.de)
         );
 
-        if (!arestaDadosOriginal) continue;
+        if (!aresta) continue;
 
-        let valorResistencia = parseFloat(arestaDadosOriginal.label.split(',')[0]);
-        let duracaoMs = (valorResistencia / 2) * 1000;
-        if (duracaoMs < 500) duracaoMs = 500; 
+        let texto = String(aresta.label);
+        
+        let numeros = texto.match(/(\d+(\.\d+)?)/); 
+        
+        if (numeros) {
+            valorResistencia = parseFloat(numeros[0]);
+        } else {
+            console.warn("Não achei número na label:", texto);
+        }
+        
+        console.log("Resistência lida:", valorResistencia); 
+
+        let duracaoMs = (valorResistencia / 4) * 1000;
 
         let animacaoObj = {
             id: Math.random(), 
@@ -203,30 +227,27 @@ async function executarCaminho(caminho, cor, offsetLateral) {
 
         animacoesAtivas = animacoesAtivas.filter(a => a.id !== animacaoObj.id);
         
-        // --- CORREÇÃO DA SETA INVERTIDA AQUI ---
         edgesDataSet.update({
-            id: arestaDadosOriginal.id,
+            id: aresta.id,
             color: { color: cor }, 
             width: 4,
-            // FORÇA A DIREÇÃO DA ARESTA PARA SEGUIR O FLUXO DA ÁGUA
             from: passo.de,   
             to: passo.para,
-            arrows: { to: { enabled: true, scaleFactor: 0.5 } } // Garante que a ponta apareça no final
+            arrows: { to: { enabled: true, scaleFactor: 0.5 } } 
         });
         network.redraw();
     }
 }
+
 function getDestinoUsuario() {
     const inputVal = document.getElementById('input-destino').value;
     
-    // Se o usuário não digitou nada, usa o padrão do JSON
     if (inputVal === "") {
         return dadosJSON.destino_escolhido;
     }
 
     const id = parseInt(inputVal);
 
-    // Verifica se o nó existe no grafo
     const existe = dadosJSON.nodes.some(n => n.id == id);
     if (!existe) {
         alert("O nó " + id + " não existe no grafo!");
@@ -236,23 +257,18 @@ function getDestinoUsuario() {
     return id;
 }
 
-// --- CORREÇÃO AQUI ---
 function resetarMapa() {
-    animacoesAtivas = []; // Para animações correntes
+    animacoesAtivas = []; 
     
-    // Em vez de network.setData(...), que reseta tudo (inclusive posição dos nós),
-    // nós vamos pegar as arestas EXISTENTES e resetar só a cor delas.
     const edgesDataSet = network.body.data.edges;
     
-    // Cria uma lista de atualizações para todas as arestas
     const updates = edgesDataSet.get().map(edge => ({
         id: edge.id,
-        color: { color: '#cccccc' }, // Volta pra cinza
-        width: 2,                    // Volta pra fino
+        color: { color: '#cccccc' }, 
+        width: 2,                    
         dashes: false
     }));
 
-    // Aplica as atualizações em massa (sem mexer nos nós!)
     edgesDataSet.update(updates);
     network.redraw();
 }
@@ -260,25 +276,24 @@ function resetarMapa() {
 async function animarDijkstra() {
     if (!network) return;
     
-    const destino = getDestinoUsuario(); // <--- MUDOU AQUI
+    const destino = getDestinoUsuario(); 
     if (destino === null) return;
 
     resetarMapa();
     let caminho = getCaminho(dadosJSON.pred_dijkstra, destino);
     
-    if (caminho.length === 0 && destino != 0) { // Assume 0 como origem
+    if (caminho.length === 0 && destino != 0) { 
         alert("Não há caminho para este destino!");
         return;
     }
 
     await executarCaminho(caminho, '#e11d48', 0); 
-    alert("Dijkstra chegou!"); 
 }
 
 async function animarBFS() {
     if (!network) return;
 
-    const destino = getDestinoUsuario(); // <--- MUDOU AQUI
+    const destino = getDestinoUsuario(); 
     if (destino === null) return;
 
     resetarMapa();
@@ -290,13 +305,12 @@ async function animarBFS() {
     }
 
     await executarCaminho(caminho, '#2563eb', 0); 
-    alert("BFS chegou!"); 
 }
 
 async function comparar() {
     if (!network) return;
 
-    const destino = getDestinoUsuario(); // <--- MUDOU AQUI
+    const destino = getDestinoUsuario();
     if (destino === null) return;
 
     resetarMapa();
@@ -309,8 +323,78 @@ async function comparar() {
         executarCaminho(caminhoBFS, '#2563eb', 4)
     ]);
 
-        alert("Corrida Terminou!");
+}
 
+async function animarFluxo() {
+    if (!network) return;
+    
+    let inputDestino = document.getElementById('input-destino').value;
+
+    if (inputDestino !== "") {
+        let idDigitado = parseInt(inputDestino);
+        let idCalculadoNoC = dadosJSON.destino_escolhido;
+
+        if (idDigitado !== idCalculadoNoC) {
+            alert(`A simulação atual foi calculada no C para o Destino ${idCalculadoNoC}.\n\nPara ver o fluxo para o nó ${idDigitado}, você precisa rodar o comando 'vis' ou 'fuk' no terminal C novamente escolhendo este nó.`);
+            document.getElementById('input-destino').value = idCalculadoNoC;
+        }
+    }
+
+    resetarMapa(); 
+
+    const edgesDataSet = network.body.data.edges;
+    const allEdges = edgesDataSet.get();
+    
+    const updates = allEdges.map(edge => {
+        return {
+            id: edge.id,
+            color: { color: edge.hiddenColor },
+            width: edge.hiddenWidth
+        };
+    });
+    edgesDataSet.update(updates);
+
+    const fps = 60;
+    const duracaoLoop = 2000; 
+    
+    const arestasComFluxo = allEdges.filter(e => e.hiddenWidth > 1);
+
+    if (arestasComFluxo.length === 0) {
+        alert("Nenhum fluxo detectado na rede!");
+        return;
+    }
+
+    const numParticulas = 3; 
+    
+    for (let onda = 0; onda < numParticulas; onda++) {
+        
+        arestasComFluxo.forEach(edge => {
+            animacoesAtivas.push({
+                id: Math.random(),
+                noOrigem: edge.from,
+                noDestino: edge.to,
+                progresso: 0,
+                cor: '#33CCFF', 
+                offsetLateral: 0
+            });
+        });
+
+        let frames = 60; 
+        for (let i = 1; i <= frames; i++) {
+            animacoesAtivas.forEach(anim => {
+                if (anim.progresso < 1) {
+                    anim.progresso += 1/frames;
+                }
+            });
+            network.redraw();
+            await sleep(1000 / fps);
+        }
+        animacoesAtivas = animacoesAtivas.filter(a => a.progresso < 1);
+    }
+
+    animacoesAtivas = [];
+    network.redraw();
+    
 }
 
 iniciar();

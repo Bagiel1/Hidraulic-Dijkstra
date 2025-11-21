@@ -7,9 +7,9 @@
 
 int main(){
 
-    int numnodes, from_node, to_node, destino, tipo;
+    int numnodes, from_node, to_node, destino, tipo, capacidade;
     char nome[20];
-    float altura, resistencia, capacidade, resistencia_busca;
+    float altura, resistencia, resistencia_busca, capacidade_reserva;
     printf("Escolha quantos vertices tera: ");
     scanf("%d", &numnodes);
     getchar();
@@ -31,8 +31,8 @@ int main(){
             g->vertices[i].tipo= TIPO_JUNÇÃO;
         }else if(tipo == 2){
             g->vertices[i].tipo= TIPO_RESERVATORIO;
-            scanf("%f", &capacidade);
-            g->vertices[i].dados.reservatorio.capacidade= capacidade;
+            scanf("%d", &capacidade_reserva);
+            g->vertices[i].dados.reservatorio.capacidade= capacidade_reserva;
         }
     }
 
@@ -57,8 +57,8 @@ int main(){
                 printf("Nao tem conexao entre %d e %d\n", from_node, to_node);
             }
         }else if(strcmp(comando, "adicionar") == 0){
-            scanf("%d %d %f", &from_node, &to_node, &resistencia);
-            add_cano_com_altura(g, from_node, to_node, resistencia);
+            scanf("%d %d %f %d", &from_node, &to_node, &resistencia, &capacidade);
+            add_cano_com_altura(g, from_node, to_node, resistencia, capacidade);
         }else if(strcmp(comando, "dji") == 0){
             printf("Escolha o destino: ");
             scanf("%d", &destino);
@@ -91,9 +91,18 @@ int main(){
             buscarIntervalo(abb, min_res, max_res);
             encerrarArvore(abb);
         }else if(strcmp(comando, "vis") == 0){
+            printf("Escolha o Destino para o Fluxo: ");
+            scanf("%d", &destino);
+            zerar_fluxos(g);
+            int fluxo_total= ford_fukerson(g, 0, destino, 0);
             djisktra(g, 0, distancias, predecessorDji);
             BFS(g, 0, predecessorBFS);
-            exportar_json(g, predecessorDji, predecessorBFS, 0);
+            exportar_json(g, predecessorDji, predecessorBFS, destino, fluxo_total);
+        }else if(strcmp(comando, "fuk") == 0){
+            printf("Escolha o destino: ");
+            scanf("%d", &destino);
+            zerar_fluxos(g);
+            ford_fukerson(g, 0, destino, 1);
         }
     }
 

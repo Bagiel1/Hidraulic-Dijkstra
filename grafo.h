@@ -33,6 +33,9 @@ struct cano {
     int destino;
     float resistencia;
     struct cano *proximo; 
+    int capacidade;
+    int fluxo;
+    bool eh_reversa;
 };
 typedef struct cano Cano; 
 
@@ -50,13 +53,15 @@ void print_graph(Graph *g);
 void remove_connect(Graph *g, int from_node, int to_node);
 int hasEdge(Graph *g, int from_node, int to_node);
 int set_data(Graph *g, int id, char *nome, float altura);
-void add_cano_com_altura(Graph *g, int id_A, int id_B, float resistencia);
+void add_cano_com_altura(Graph *g, int id_A, int id_B, float resistencia, int capacidade);
 void djisktra(Graph *g, int origem, float *distancias, int *predecessor);
 void BFS(Graph *g, int origem, int *predecessor);
+int ford_fukerson(Graph *g, int origem, int destino, int contar);
 bool *alcancaveis(Graph *g, int origem);
 void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to);
 void imprimir_caminho_pilha(Graph *g, int destino, int *predecessor);
 void DFS(Graph *g, int origem, int destino, int qual, Arvore *abb);
 void prim(Graph *g, int origem, float *distancias, int *predecessor);
+void zerar_fluxos(Graph *g);
 void imprimir_arestas_prim(Graph *g, int *predecessor);
-void exportar_json(Graph *g, int *pred_djisktra, int *pred_bfs, int destino);
+void exportar_json(Graph *g, int *pred_djisktra, int *pred_bfs, int destino, int max_flow);

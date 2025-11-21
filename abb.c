@@ -66,7 +66,7 @@ int adicionar(Arvore *arvore, float custo, int *caminho, int tamanho){     //Faz
             aux= aux->esquerda;
 
         }else if(custo > aux->custo){
-            if(aux->esquerda == NULL){
+            if(aux->direita == NULL){
                 No *p= (No*)malloc(sizeof(No));
                 p->custo= custo;
                 p->lista_caminhos= novoItem;
@@ -120,11 +120,12 @@ void imprimir_caminhos_do_no(No *no){
 }
 
 void encerrarNos(No *no){       //Função auxiliar do encerrarArvore que da free em todos os nós individualmente com o método de posordem
-    if(no == NULL){
-        encerrarNos(no->esquerda);
-        encerrarNos(no->direita);
-        return;
-    }
+    
+    if(no == NULL) return;
+
+    encerrarNos(no->esquerda);
+    encerrarNos(no->direita);
+
     CaminhoItem *item= no->lista_caminhos;
     while(item != NULL){
         CaminhoItem *temp= item;
@@ -148,15 +149,15 @@ void buscar_intervalo_recursivo(No *no, float min, float max, int *contador){
     if(no == NULL){
         return;
     }
-    if(no->custo > min){
+    if(no->custo > (min-0.001)){
         buscar_intervalo_recursivo(no->esquerda, min, max, contador);
     }
-    if(no->custo >= min && no->custo <= max){
+    if(no->custo >= (min-0.001) && no->custo <= (max+0.001)){
         printf("\n Resistencia encontrada: %.2f \n", no->custo);
         imprimir_caminhos_do_no(no); 
         (*contador)++;
     }
-    if(no->custo < max){
+    if(no->custo < (max+0.001)){
         buscar_intervalo_recursivo(no->direita, min, max, contador);
     }
 

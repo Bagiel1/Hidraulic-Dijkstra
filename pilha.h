@@ -1,6 +1,6 @@
 typedef struct pilha Pilha;
 
-Pilha* create_pilha();
+Pilha* create_pilha(int capacidade);
 
 void push(Pilha* pilha, int valor); // empilha
 

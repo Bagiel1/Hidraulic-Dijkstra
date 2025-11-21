@@ -1,0 +1,47 @@
+import random
+
+NUM_NODES = 10
+GRAU_MEDIO = 1
+MAX_RESISTENCIA = 20.0
+MAX_CAPACIDADE = 50
+
+print(f"{NUM_NODES}")
+
+for i in range(NUM_NODES):
+    nome = f"{i}"
+    altura = 100.0 - (i * 0.8) + random.uniform(-5, 5)
+    if altura < 0: altura = 0
+    
+    if i == 0:
+        print(f"{nome} 200.0 2 10000") 
+    elif i == NUM_NODES - 1:
+        print(f"{nome} 0.0 1") 
+    else:
+        print(f"{nome} {altura:.1f} 1")
+
+conexoes_feitas = set()
+
+for origem in range(NUM_NODES):
+    qtd_conexoes = random.randint(5, 25)
+   
+    possiveis_destinos = list(range(NUM_NODES))
+    possiveis_destinos.remove(origem)
+    
+    destinos = random.sample(possiveis_destinos, min(len(possiveis_destinos), qtd_conexoes))
+    
+    for destino in destinos:
+        chave = tuple(sorted((origem, destino)))
+        
+        if chave not in conexoes_feitas:
+            res = round(random.uniform(1, MAX_RESISTENCIA), 1)
+            cap = random.randint(5, MAX_CAPACIDADE)
+            
+            print(f"adicionar {origem} {destino} {res} {cap}")
+            
+            conexoes_feitas.add(chave)
+
+print(f"adicionar {NUM_NODES-2} {NUM_NODES-1} 1.0 50")
+print(f"adicionar 0 {random.randint(10, 50)} 1.0 50")
+
+print(f"vis {NUM_NODES - 1}")
+print("sair")
