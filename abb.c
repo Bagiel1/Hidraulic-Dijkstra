@@ -5,18 +5,18 @@
 #include "pilha.h"
 
 struct caminho_item{
-    int *caminho;
-    int tamanho;
-    CaminhoItem *proximo;
+    int *caminho; // vetor do caminho
+    int tamanho; // quantidade de vértices
+    CaminhoItem *proximo; // guarda os caminhos
 };
 
 struct no{          //Struct dos nós da arvore
-    float custo;
-    No *direita, *esquerda;
-    CaminhoItem *lista_caminhos;    
+    float custo; // peso, sua chave
+    No *direita, *esquerda; // filhos
+    CaminhoItem *lista_caminhos; // lista dos caminhos 
 };
 
-struct arvore{      //Struct da árvore em si
+struct arvore{      //Struct da árvore em si, para o nó da raiz
     No *raiz;
 };
 
@@ -145,20 +145,21 @@ void encerrarArvore(Arvore *arvore){        //Encerra a arvore
     free(arvore);
 }
 
-void buscar_intervalo_recursivo(No *no, float min, float max, int *contador){
+void buscar_intervalo_recursivo(No *no, float min, float max, int *contador){ // busca nós da abb dentro dum intervalo
+    // contador é ponteiro para um inteiro para contar nós encontrados, indo alterando o valor
     if(no == NULL){
-        return;
+        return; // verificação de segurança
     }
     if(no->custo > (min-0.001)){
-        buscar_intervalo_recursivo(no->esquerda, min, max, contador);
+        buscar_intervalo_recursivo(no->esquerda, min, max, contador); // busca a esquerda
     }
     if(no->custo >= (min-0.001) && no->custo <= (max+0.001)){
         printf("\n Resistencia encontrada: %.2f \n", no->custo);
         imprimir_caminhos_do_no(no); 
-        (*contador)++;
+        (*contador)++; // se o nó tá dentro do intervalo, imprime e conta
     }
     if(no->custo < (max+0.001)){
-        buscar_intervalo_recursivo(no->direita, min, max, contador);
+        buscar_intervalo_recursivo(no->direita, min, max, contador); // busca a direita
     }
 
 }
@@ -166,12 +167,12 @@ void buscar_intervalo_recursivo(No *no, float min, float max, int *contador){
 void buscarIntervalo(Arvore *arvore, float min, float max){
     if(arvore == NULL || arvore->raiz == NULL){
         printf("Nenhum caminho encontrado na arvore.\n");
-        return;
+        return; // auto-explicativo, verificação
     }
-    int encontrados= 0;
+    int encontrados= 0; // número de caminhos encontrados
     printf("Buscando caminhos com resistencia entre %.2f e %.2f...\n", min, max);
 
-    buscar_intervalo_recursivo(arvore->raiz, min, max, &encontrados);
+    buscar_intervalo_recursivo(arvore->raiz, min, max, &encontrados); // chama função recursiva
 
     if(encontrados == 0){
         printf("Nenhum caminho encontrado no intervalo!\n");

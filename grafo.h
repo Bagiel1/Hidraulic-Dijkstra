@@ -1,67 +1,96 @@
 #include <stdbool.h>
 #include "abb.h"
 
-typedef enum {
-    TIPO_JUNÇÃO,
-    TIPO_RESERVATORIO
-} TipoVertice;
+// arquivo .h do TAD Grafo
 
-struct reservatorio {
-    float capacidade;
+typedef enum {
+    TIPO_JUNÇÃO, // 0
+    TIPO_RESERVATORIO // 1
+} TipoVertice; // característica que determinado vértice assume
+
+struct reservatorio { 
+    float capacidade; // valor que um reservatório carrega (sua capacidade)
 };
 typedef struct reservatorio Reservatorio; 
 
 struct dadosjuncao {
-    int tipoJuncao;
+    int tipoJuncao; // valor que uma junção carrega (genérico)
 };
 typedef struct dadosjuncao DadosJuncao; 
 
 struct vertice {
-    int id;
-    float altura;
-    char *nome;
-    TipoVertice tipo;   
+    int id; // valor de identificação
+    float altura; // altura do nó
+    char *nome; // ponteiro para string do nó
+    TipoVertice tipo;  // TIPO_JUNCAO ou TIPO_RESERVATORIO 
 
-    union {
-        Reservatorio reservatorio;
+    union { // vértice é reservatório ou junção
+        Reservatorio reservatorio; // guarda capacidade ou tipoJuncao
         DadosJuncao juncao;
-    } dados;
+    } dados; // union faz com que as variáveis compartilhem o mesmo espaço de memória
 };
 typedef struct vertice Vertice; 
 
+// maior parte das características está no cano (conexão)
+
 struct cano {
-    int destino;
-    float resistencia;
-    struct cano *proximo; 
-    int capacidade;
-    int fluxo;
-    bool eh_reversa;
+    int destino; // vértice para onde o cano vai
+    float resistencia; // peso da conexão
+    struct cano *proximo; // ponteiro que aponta para a próxima aresta na lista de adjacência
+    int capacidade; // capacidade do cano de vazão (para ford-fulkerson)
+    int fluxo; // quanto tem de água num ponto (para ford-fulkerson)
+    bool eh_reversa; // (para ford-fulkerson, toda conexão tem que ser reciproca, verificação)
 };
 typedef struct cano Cano; 
 
 struct graph {
-    int numnodes;
-    Vertice *vertices;
-    Cano **list_adj;
+    int numnodes; // número de nós do grafo
+    Vertice *vertices; // ponteiro para a lista de vértices
+    Cano **list_adj; // ponteiro de ponteiro para da lista de adjacencia
+    // cada posição tem um ponteiro que aponta para a conexão do vértice
 };
 typedef struct graph Graph; 
 
+Graph *create_graph(int numnodes); // cria grafo com um determinado número de nós
 
-Graph *create_graph(int numnodes);
-void destroy_graph(Graph *g);
-void print_graph(Graph *g);
-void remove_connect(Graph *g, int from_node, int to_node);
-int hasEdge(Graph *g, int from_node, int to_node);
-int set_data(Graph *g, int id, char *nome, float altura);
-void add_cano_com_altura(Graph *g, int id_A, int id_B, float resistencia, int capacidade);
-void djisktra(Graph *g, int origem, float *distancias, int *predecessor);
-void BFS(Graph *g, int origem, int *predecessor);
-int ford_fukerson(Graph *g, int origem, int destino, int contar);
-bool *alcancaveis(Graph *g, int origem);
-void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to);
-void imprimir_caminho_pilha(Graph *g, int destino, int *predecessor);
-void DFS(Graph *g, int origem, int destino, int qual, Arvore *abb);
-void prim(Graph *g, int origem, float *distancias, int *predecessor);
-void zerar_fluxos(Graph *g);
-void imprimir_arestas_prim(Graph *g, int *predecessor);
-void exportar_json(Graph *g, int *pred_djisktra, int *pred_bfs, int destino, int max_flow);
+void destroy_graph(Graph *g); // destroi grafo, limpa ele todo
+
+void print_graph(Graph *g); // printa a situação do grafo
+
+void remove_connect(Graph *g, int from_node, int to_node); // remove a conexão, passando o nó de origem e de destino
+
+int hasEdge(Graph *g, int from_node, int to_node); // verifica se tem conexão entre dois nós
+
+int set_data(Graph *g, int id, char *nome, float altura); // alterar o nó de id definido para um novo nome e altura
+
+void add_cano_com_altura(Graph *g, int id_A, int id_B, float resistencia, int capacidade); 
+// adiciona uma conexão com base na altura, para saber o sentido
+
+void djisktra(Graph *g, int origem, float *distancias, int *predecessor); // algoritmo para achar o caminho de menor custo
+
+void BFS(Graph *g, int origem, int *predecessor); // busca em largura, encontra caminho mais curto sem considerar pesos
+// predecessor é uma lista que diz qual vértice vem antes do que estamos analisando na iteração, num caminho
+
+int ford_fukerson(Graph *g, int origem, int destino, int contar); 
+// para calcular fluxo máximo entre um vértice de origem e destino num grafo que as arestas tem capacidade
+
+bool *alcancaveis(Graph *g, int origem);  // quais vértices podem ser encontrados a partir de um de origem
+
+void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to); 
+// corta água num cano e vê quais vértices ficam sem abastecer
+
+void imprimir_caminho_pilha(Graph *g, int destino, int *predecessor); 
+// apenas para imprimir o caminho gerado por djisktra ao contrário
+
+void DFS(Graph *g, int origem, int destino, int qual, Arvore *abb); 
+// gera todos os caminhos entre dois vértices
+
+void prim(Graph *g, int origem, float *distancias, int *predecessor); 
+// conectar todos os nós com menor custo possível, sem ciclo
+
+void zerar_fluxos(Graph *g); // reseta todo fluxo do grafo
+
+void imprimir_arestas_prim(Graph *g, int *predecessor); // imprime o caminho encontrado pelo algoritmo de prim
+
+void exportar_json(Graph *g, int *pred_djisktra, int *pred_bfs, int destino, int max_flow); 
+// exportar todo o grafo pra um arquivo jason, para visualização, com algoritmo djisktra, bfs e um max_flow
