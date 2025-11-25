@@ -5,9 +5,9 @@
 #include "pilha.h"
 
 struct caminho_item{
-    int *caminho; // vetor do caminho
+    int *caminho; // vetor com caminho (nós visitados)
     int tamanho; // quantidade de vértices
-    CaminhoItem *proximo; // guarda os caminhos
+    CaminhoItem *proximo; // próximo item
 };
 
 struct no{          //Struct dos nós da arvore
@@ -30,7 +30,7 @@ Arvore* criarABB(){        //Aloca a árvore e começa com raiz nula
     return arvore;
 }
 
-CaminhoItem *criar_caminho_item(int *caminho, int tamanho){
+CaminhoItem *criar_caminho_item(int *caminho, int tamanho){ // aloca CaminhoItem (nó lista), auxilia na função adicionar
     CaminhoItem *novo= (CaminhoItem*)malloc(sizeof(CaminhoItem));
     novo->caminho= caminho;
     novo->tamanho= tamanho;
@@ -41,7 +41,7 @@ CaminhoItem *criar_caminho_item(int *caminho, int tamanho){
 int adicionar(Arvore *arvore, float custo, int *caminho, int tamanho){     //Faz uma tipo de busca binária, vendo se o código é maior ou menor
     CaminhoItem *novoItem= criar_caminho_item(caminho, tamanho);
 
-    if(arvore->raiz == NULL){
+    if(arvore->raiz == NULL){ // se a árvore tiver vazia
         No *p= (No*)malloc(sizeof(No));       
         p->custo= custo;
         p->lista_caminhos= novoItem;
@@ -101,21 +101,21 @@ No *buscar(Arvore *arvore, float custo){         //Busca o código no nós da ar
     return NULL;
 }
 
-void imprimir_caminhos_do_no(No *no){
-    if(no == NULL) return;
+void imprimir_caminhos_do_no(No *no){ // imprimir caminhos armazenados no nó
+    if(no == NULL) return; // verificação
 
-    CaminhoItem *item = no->lista_caminhos;
+    CaminhoItem *item = no->lista_caminhos;  // primeira lista de caminhos do nó
     int contador = 1;
 
     while(item != NULL){
-        printf("Opcao %d: ", contador++);
-        for(int i = 0; i < item->tamanho; i++){
+        printf("Opcao %d: ", contador++); 
+        for(int i = 0; i < item->tamanho; i++){ // imprime ids que compõe caminho
             printf("%d", item->caminho[i]);
             if(i < item->tamanho - 1) printf(" -> ");
         }
         printf("\n");
         
-        item = item->proximo; 
+        item = item->proximo; // avança para próximo caminho da lista
     }
 }
 
