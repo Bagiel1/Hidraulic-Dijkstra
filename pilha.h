@@ -2,7 +2,7 @@ typedef struct pilha Pilha; // estrutura para pilha
 
 // arquivo .h do TAD Pilha
 
-Pilha* create_pilha(); // cria pilha
+Pilha* create_pilha(int capacidade); // cria pilha
 
 void push(Pilha* pilha, int valor); // empilha
 

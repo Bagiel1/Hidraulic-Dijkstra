@@ -96,21 +96,30 @@ async function iniciar() {
                 },
                 shadow: false              
             },
-            physics: {
+physics: {
                 enabled: true,
-                solver: 'forceAtlas2Based',
+                solver: 'forceAtlas2Based', 
                 forceAtlas2Based: {
-                    gravitationalConstant: -120, 
-                    centralGravity: 0.005,
-                    springLength: 230,     
-                    springConstant: 0.08
+                    gravitationalConstant: -100, 
+                    centralGravity: 0.005,       
+                    springLength: 200,           
+                    springConstant: 0.05,     
+                    damping: 0.9                
                 },
-                stabilization: { enabled: true, iterations: 1000 }
+                maxVelocity: 30,                
+                minVelocity: 0.1,               
+                stabilization: {
+                    enabled: true,
+                    iterations: 1000,            
+                    updateInterval: 50,
+                    onlyDynamicEdges: false,
+                    fit: true
+                }
             },
             interaction: {
                 hover: true,
                 zoomView: true,
-                dragNodes: true
+                dragNodes: true,    
             }
         };
         network = new vis.Network(container, data, options);

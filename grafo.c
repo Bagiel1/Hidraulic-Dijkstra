@@ -41,7 +41,12 @@ Graph *create_graph(int numnodes){ // aloca e cria Grafo
 }
 
 
-void remove_connect(Graph *g, int from_node, int to_node){ // removendo conexão
+int remove_connect(Graph *g, int from_node, int to_node){ // removendo conexão
+    if(g == NULL) return 0;
+    if(from_node < 0 || from_node >= g->numnodes || to_node < 0 || to_node >= g->numnodes){
+        printf("O no %d ou %d nao existe! Escolha entre 0 e %d.\n",from_node, to_node, g->numnodes-1);
+        return 0;
+    }
     Cano *cano= g->list_adj[from_node]; // aponta para primeiro cano que from_node tem conexão (lista de adjacência do from_node)
     Cano *cano_aux= NULL; // ponteiro auxiliar (nó anterior ao cano analisado)
     while(cano != NULL){
@@ -52,12 +57,13 @@ void remove_connect(Graph *g, int from_node, int to_node){ // removendo conexão
                 cano_aux->proximo= cano->proximo; // próximo do aux agora é o proximo do cano (pula o cano, removido)
             }
             free(cano); // libera cano
-            return;
+            return 1;
         }
         cano_aux= cano;
         cano= cano->proximo; // para percorrer a lista
     }
     printf("Não encontrado essa ligacao");
+    return 0;
 }
 
 void destroy_graph(Graph *g){ // liberar grafo
@@ -161,6 +167,11 @@ int add_edge(Graph *g, int from_node, int to_node, float resistencia, int capaci
 }
 
 int hasEdge(Graph *g, int from_node, int to_node){ // ver se tem conexão
+    if(g == NULL) return 0;
+    if(from_node < 0 || from_node >= g->numnodes || to_node < 0 || to_node >= g->numnodes){
+        printf("O no %d ou %d nao existe! Escolha entre 0 e %d.\n",from_node, to_node, g->numnodes-1);
+        return 0;
+    }
     Cano *cano= g->list_adj[from_node]; // cano é o primeiro elemento da lista de adjacência de "from_node"
     while(cano != NULL){ 
         if(cano->eh_reversa == true){ // se for reciproca
@@ -177,6 +188,27 @@ int hasEdge(Graph *g, int from_node, int to_node){ // ver se tem conexão
 }
 
 void add_cano_com_altura(Graph *g, int id_A, int id_B, float resistencia, int capacidade){ // add aresta com base na altura dos nós
+    if(g == NULL){
+        printf("Grafo nao inicializado.\n");
+        return;
+    }
+
+    if(id_A < 0 || id_A > g->numnodes || id_B < 0 || id_B >= g->numnodes){
+        printf("Nos invalidos (%d e %d).\n", id_A, id_B);
+        printf("    IDs validos vao de 0 a %d.\n", g->numnodes-1);
+        return;
+    }
+
+    if(id_A == id_B){
+        printf("Nao e possivel conectar um no a ele mesmo.\n");
+        return;
+    }
+
+    if(resistencia < 0 || capacidade < 0){
+        printf("Resistencia e Capacidade devem ser valores positivos.\n");
+        return;
+    }
+
     float altura_A= g->vertices[id_A].altura;
     float altura_B= g->vertices[id_B].altura; 
     // acessa altura dos vértices com os ids passados por meio do vetor de vértices (onde quero a conexão)
@@ -209,6 +241,7 @@ void add_cano_com_altura(Graph *g, int id_A, int id_B, float resistencia, int ca
         add_edge(g, id_A, id_B, resistencia_final1, capacidade, false); // add aresta de A a B
         add_edge(g, id_B, id_A, resistencia_final2, capacidade, false); // add aresta de B a A
     }
+    printf("Cano adicionado com sucesso entre %d e %d.\n", id_A, id_B);
 }
 
 // o vetor predecessor acessa os ids dos nós de onde os nós que estamos analisando saem 
@@ -326,6 +359,14 @@ bool *alcancaveis(Graph *g, int origem){ // retorna vetor com os nós que foram 
 
 void imprimir_caminho_pilha(Graph *g, int destino, int *predecessor){  
     // faz uma pilha para imprimir caminho, já que o vetor "predecessor" guarda o caminho do fim para o começo
+    if(destino < 0 || destino >= g->numnodes){
+        printf("O no %d nao existe! Escolha entre 0 e %d.\n", destino, g->numnodes-1);
+        return;
+    }
+    if(predecessor[destino] == -1 && destino != 0){
+        printf("Nao existe caminho hidraulico ate o no %d.\n", destino);
+        return;
+    }
     Pilha *p= create_pilha(g->numnodes);
     push(p, destino); // empilho vértice destino
 
@@ -335,12 +376,18 @@ void imprimir_caminho_pilha(Graph *g, int destino, int *predecessor){
         proximo= predecessor[proximo]; // atualiza valor
     }
 
+    printf("Caminho: ");
     while(!pilha_vazia(p)){
-        printf("%d -> ", pop(p)); 
+        printf("%d", pop(p)); 
+        if(!pilha_vazia(p)){
+            printf(" -> ");
+        }
         // enquanto a pilha não tiver vazia, vai retirando os valores e imprimindo do topo ao fundo
         // mostra o caminho até o vértice destino
     }
     
+    printf("\n");
+
     encerrarPilha(p); // libera pilha
 }
 
@@ -487,6 +534,19 @@ void prim(Graph *g, int origem, float *distancias, int *predecessor){
 
 void DFS(Graph *g, int origem, int destino, int qual, Arvore *abb){ // encontra todos os caminhos possíveis entre dois pontos
     // agora, utilizando as funções já preparadas
+    if(g == NULL){
+        printf("Grafo nao inicializado.\n");
+        return;
+    }
+    if(origem < 0 || origem >= g->numnodes || destino < 0 || destino >= g->numnodes){
+        printf("Nos de origem (%d) ou destino (%d) invalidos.\n", origem, destino);
+        return;
+    }
+
+    if(qual == 2 && abb == NULL){
+        printf("DFS abortada: Arvore ABB nao inicializada.\n");
+        return;
+    }
     Pilha *p= create_pilha(g->numnodes);
     bool *visitados= (bool*)calloc(g->numnodes, sizeof(bool)); // inicializa e aloca vetor de visitados
     if(qual == 1){ // recursivo, para imprimir caminhos
@@ -496,7 +556,7 @@ void DFS(Graph *g, int origem, int destino, int qual, Arvore *abb){ // encontra 
     }
     encerrarPilha(p); // libera pilha
     free(visitados); // libera vetor de visitados
-    printf("\n");
+    if(qual == 1) printf("\n");
 }
 
 int busca_caminho_ford_fukerson(Graph *g, int origem, int destino, int *predecessor, FilaPrio *pq){
@@ -534,11 +594,33 @@ int busca_caminho_ford_fukerson(Graph *g, int origem, int destino, int *predeces
 }
 
 int ford_fukerson(Graph *g, int origem, int destino, int contar){ // Calcular fluxo máximo entre dois nós
+
+    if(g == NULL) return 0;
+
+    //Validação de Fronteira
+    if(origem < 0 || origem >= g->numnodes || destino < 0 || destino >= g->numnodes){
+        printf("Ford-Fulkerson falhou: IDs de origem/destino invalidos.\n");
+        return 0;
+    }
+
+    //Origem não pode ser o Destino
+    if(origem == destino){
+        printf("A origem e igual ao destino. O fluxo seria infinito.\n");
+        return 0;
+    }
+
     int fluxo_total= 0; // inicializando o acumulador
     int iteracao= 1;
 
     int *predecessor= (int*)malloc(g->numnodes * sizeof(int)); // alocando o vetor dos nós "pais" (de onde os outros vem)
     FilaPrio *pq= create_pq(g->numnodes * g->numnodes);
+
+    if(predecessor == NULL || pq == NULL){
+        printf("Falha de memoria no Ford-Fulkerson.\n");
+        if(predecessor) free(predecessor);
+        if(pq) destroy_pq(pq);
+        return 0;
+    }
 
     zerar_fluxos(g); // inicializa cálculo
 
@@ -627,7 +709,16 @@ void zerar_fluxos(Graph *g){ // inicializa fluxos
 
 void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to){ 
     // função para ver quais vértices não são abastecidos ao cortar uma conexão
+    if(g == NULL){
+        printf("Grafo nao inicializado.\n");
+        return;
+    }
     
+    if(cano_from < 0 || cano_from >= g->numnodes || cano_to < 0 || cano_to >= g->numnodes){
+        printf("Analise cancelada: Um dos nos informados nao existe.\n");
+        return;
+    }
+
     float resistencia_cano= get_resistencia(g, cano_from, cano_to); // busca resistência do cano entre dois nós
     if(resistencia_cano == -1.0){
         return; // verificação de conexão ou erro
@@ -637,6 +728,10 @@ void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to){
 
     bool *alcancaveis_antes= alcancaveis(g, origem); // vetor de nós visitados (abastecidos ou não) antes
 
+    int capacidade = 0;
+    bool eh_reversa = false;
+    bool encontrou_dados = false;
+
     printf("Removendo o cano %d -> %d...\n", cano_from, cano_to);
     Cano *cano= g->list_adj[cano_from]; // percorre lista de adjacência do cano_from
     while(cano != NULL){
@@ -644,11 +739,21 @@ void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to){
             cano= cano->proximo; // ignora aresta virtual e passa para próxima conexão
             continue;
         }
-        if(cano->destino == cano_to) break; // se econtrar cano que quero, sai o while para salvar informações
+        if(cano->destino == cano_to){ // se econtrar cano que quero, sai do while e salva informações
+            int capacidade= cano->capacidade;
+            bool eh_reversa= cano->eh_reversa;
+            encontrou_dados= true;
+        }
+    
         cano= cano->proximo; // atualiza conexão
     }
-    int capacidade= cano->capacidade;
-    bool eh_reversa= cano->eh_reversa;
+    
+    if(!encontrou_dados){
+        printf("Falha interna ao localizar dados do cano.\n");
+        free(alcancaveis_antes);
+        return;
+    }
+
     remove_connect(g, cano_from, cano_to); // remove conexão do grafo
 
     bool* alcancaveis_depois = alcancaveis(g, origem); // vetor de nós visitados (abastecidos ou não) após quebra de conexão
@@ -672,6 +777,18 @@ void analisar_corte_agua(Graph *g, int origem, int cano_from, int cano_to){
 
 
 void exportar_json(Graph *g, int* pred_dijkstra, int* pred_bfs, int destino, int max_flow){ // exporta para arquivo json na web (para visualização)
+    if(g == NULL){
+        printf("Impossivel exportar: Grafo nao existe.\n");
+        return;
+    }
+    if(pred_dijkstra == NULL || pred_bfs == NULL){
+        printf("Impossivel exportar: Dados de caminho (Dijkstra/BFS) nao calculados.\n");
+        return;
+    }
+    if(destino < 0 || destino >= g->numnodes){
+        printf("=Destino informado para exportacao e invalido.\n");
+        return;
+    }
     FILE *f = fopen("vis/saida.json", "w");
     if (f == NULL) return; // verificação para abertura do arquivo
 

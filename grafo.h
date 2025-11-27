@@ -57,7 +57,7 @@ void destroy_graph(Graph *g); // destroi grafo, limpa ele todo
 
 void print_graph(Graph *g); // printa a situação do grafo
 
-void remove_connect(Graph *g, int from_node, int to_node); // remove a conexão, passando o nó de origem e de destino
+int remove_connect(Graph *g, int from_node, int to_node); // remove a conexão, passando o nó de origem e de destino
 
 int hasEdge(Graph *g, int from_node, int to_node); // verifica se tem conexão entre dois nós
 

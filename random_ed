@@ -1,28 +1,42 @@
 import random
 
-NUM_NODES = 10
-GRAU_MEDIO = 1
+# Configurações do Grafo
+NUM_NODES = 100
 MAX_RESISTENCIA = 20.0
 MAX_CAPACIDADE = 50
 
-print(f"{NUM_NODES}")
+# --- 1. Opção 1: Iniciar Grafo ---
+print("1")              # Escolhe opção 1 no menu
+print(f"{NUM_NODES}")   # Informa quantidade de nós
 
+# Loop para preencher os dados dos nós
 for i in range(NUM_NODES):
-    nome = f"{i}"
+    nome = f"No_{i}"
     altura = 100.0 - (i * 0.8) + random.uniform(-5, 5)
     if altura < 0: altura = 0
     
     if i == 0:
-        print(f"{nome} 200.0 2 10000") 
+        # Nó 0: Reservatório (Tipo 2)
+        # Formato C: Nome Altura Tipo(2) -> Capacidade
+        print(f"{nome} 200.0 2")
+        print("10000") 
     elif i == NUM_NODES - 1:
+        # Último nó: Junção (Tipo 1) - Destino final
         print(f"{nome} 0.0 1") 
     else:
+        # Outros nós: Junção (Tipo 1)
         print(f"{nome} {altura:.1f} 1")
+
+# O Case 1 termina. O C pede "Pressione Enter...".
+# Enviamos uma linha vazia para voltar ao menu.
+print("") 
 
 conexoes_feitas = set()
 
+# --- 2. Opção 3: Adicionar Canos (Aleatórios) ---
 for origem in range(NUM_NODES):
-    qtd_conexoes = random.randint(5, 25)
+    # Gera entre 2 e 5 conexões por nó para não ficar pesado demais
+    qtd_conexoes = random.randint(2, 5) 
    
     possiveis_destinos = list(range(NUM_NODES))
     possiveis_destinos.remove(origem)
@@ -36,12 +50,28 @@ for origem in range(NUM_NODES):
             res = round(random.uniform(1, MAX_RESISTENCIA), 1)
             cap = random.randint(5, MAX_CAPACIDADE)
             
-            print(f"adicionar {origem} {destino} {res} {cap}")
+            # Escolhe Opção 3
+            print("3")
+            # Envia: Origem Destino Resistencia Capacidade
+            print(f"{origem} {destino} {res} {cap}")
+            # Envia "Enter" para voltar ao menu
+            print("")
             
             conexoes_feitas.add(chave)
 
-print(f"adicionar {NUM_NODES-2} {NUM_NODES-1} 1.0 50")
-print(f"adicionar 0 {random.randint(10, 50)} 1.0 50")
+# --- 3. Conexões Extras Manuais (Garantir fluxo no final) ---
+print("3")
+print(f"{NUM_NODES-2} {NUM_NODES-1} 1.0 50")
+print("") # Enter
 
-print(f"vis {NUM_NODES - 1}")
-print("sair")
+print("3")
+print(f"0 {random.randint(1, 10)} 1.0 50")
+print("") # Enter
+
+# --- 4. Opção 13: Exportar JSON (Antigo 'vis') ---
+print("13")
+print(f"{NUM_NODES - 1}") # Destino final
+print("") # Enter
+
+# --- 5. Opção 0: Sair ---
+print("0")
